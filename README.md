@@ -39,10 +39,7 @@ GOB/
    ```bash
    python run.py
    ```
-4. **Access:**
-   - Website: http://localhost:5000
-   - Admin: http://localhost:5000/admin/login
-   - Default admin: username `admin`, password `admin123`
+
 
 ## Features
 
