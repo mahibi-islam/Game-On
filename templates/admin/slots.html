@@ -1,0 +1,142 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Time Slots Management{% endblock %}
+
+{% block content %}
+<div class="admin-actions">
+    <button onclick="showCreateSlotModal()" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add New Slot
+    </button>
+</div>
+
+<div class="table-container">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Time Slot</th>
+                <th>Price (BDT)</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for slot in slots %}
+            <tr>
+                <td>{{ slot.time }}</td>
+                <td>৳{{ slot.price }}</td>
+                <td>
+                    <span class="status-badge {{ 'enabled' if slot.enabled else 'disabled' }}">
+                        {{ 'Enabled' if slot.enabled else 'Disabled' }}
+                    </span>
+                </td>
+                <td>
+                    <button onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }})" class="btn btn-sm btn-primary">Edit</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Create/Edit Slot Modal -->
+<div id="slotModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeSlotModal()">&times;</span>
+        <h2 id="modal-title">Add New Slot</h2>
+        <form id="slotForm">
+            <input type="hidden" id="slot-id">
+            <div class="form-group">
+                <label for="slot-time">Time Slot (e.g., 06:00-07:00) *</label>
+                <input type="text" id="slot-time" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="slot-price">Price (BDT) *</label>
+                <input type="number" id="slot-price" class="form-control" step="0.01" required>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="slot-enabled" checked> Enabled
+                </label>
+            </div>
+            <div class="form-actions">
+                <button type="button" onclick="closeSlotModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let editingSlotId = null;
+
+function showCreateSlotModal() {
+    editingSlotId = null;
+    document.getElementById('modal-title').textContent = 'Add New Slot';
+    document.getElementById('slot-id').value = '';
+    document.getElementById('slot-time').value = '';
+    document.getElementById('slot-price').value = '';
+    document.getElementById('slot-enabled').checked = true;
+    document.getElementById('slotModal').style.display = 'block';
+}
+
+function editSlot(slotId, time, price, enabled) {
+    editingSlotId = slotId;
+    document.getElementById('modal-title').textContent = 'Edit Slot';
+    document.getElementById('slot-id').value = slotId;
+    document.getElementById('slot-time').value = time;
+    document.getElementById('slot-price').value = price;
+    document.getElementById('slot-enabled').checked = enabled;
+    document.getElementById('slotModal').style.display = 'block';
+}
+
+function closeSlotModal() {
+    document.getElementById('slotModal').style.display = 'none';
+}
+
+document.getElementById('slotForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const data = {
+        time: document.getElementById('slot-time').value,
+        price: document.getElementById('slot-price').value,
+        enabled: document.getElementById('slot-enabled').checked
+    };
+    
+    const url = editingSlotId 
+        ? `/admin/slot/${editingSlotId}/update`
+        : '/admin/slot/create';
+    
+    fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error saving slot');
+        }
+    })
+    .catch(err => {
+        alert('Error saving slot');
+    });
+});
+
+window.onclick = function(event) {
+    const modal = document.getElementById('slotModal');
+    if (event.target == modal) {
+        closeSlotModal();
+    }
+}
+</script>
+{% endblock %}
+
+
+
+
+
+

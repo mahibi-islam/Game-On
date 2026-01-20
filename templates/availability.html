@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Availability - {{ settings.turf_name if settings else 'GAME ON BOGURA' }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Live Slot Availability</h1>
+
+    <div class="availability-controls">
+        <div class="sport-selection-container small-cards">
+            <div class="sport-card selected" onclick="selectSport('football', this)">
+                <div class="sport-icon"><i class="fas fa-futbol"></i></div>
+                <h3>Football</h3>
+            </div>
+            <div class="sport-card" onclick="selectSport('badminton', this)">
+                <div class="sport-icon"><i class="fas fa-table-tennis"></i></div>
+                <h3>Badminton</h3>
+            </div>
+        </div>
+        <div class="control-row">
+            <input type="date" id="availability-date" class="form-control" min="">
+            <button onclick="loadAvailability()" class="btn btn-primary">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <label class="auto-refresh-label">
+                <input type="checkbox" id="auto-refresh"> Auto Refresh (30s)
+            </label>
+        </div>
+    </div>
+
+    <div class="availability-legend">
+        <span class="legend-item"><span class="legend-box available"></span> Available</span>
+        <span class="legend-item"><span class="legend-box booked"></span> Booked</span>
+        <span class="legend-item"><span class="legend-box pending"></span> Pending</span>
+    </div>
+
+    <div class="availability-table-container" id="availability-table-container">
+        <table class="availability-table">
+            <thead>
+                <tr>
+                    <th>Time Slot</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="availability-tbody">
+                <tr>
+                    <td colspan="4" class="text-center">Select a date to view availability</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let autoRefreshInterval = null;
+
+    // Set minimum date to tomorrow
+    document.getElementById('availability-date').min = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+    // Check if date is in URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const dateParam = urlParams.get('date');
+    const sportParam = urlParams.get('sport');
+    let selectedSport = sportParam || 'football';
+
+    if (sportParam) {
+        selectSport(sportParam, null);
+    }
+
+    if (dateParam) {
+        document.getElementById('availability-date').value = dateParam;
+        loadAvailability();
+    }
+
+    function selectSport(sport, element) {
+        selectedSport = sport;
+        // Update UI
+        document.querySelectorAll('.sport-card').forEach(c => c.classList.remove('selected'));
+        if (element) {
+            element.classList.add('selected');
+        } else {
+            // Find card by sport text if element not provided (e.g. from URL)
+            const cards = document.querySelectorAll('.sport-card');
+            if (sport === 'football') cards[0].classList.add('selected');
+            if (sport === 'badminton') cards[1].classList.add('selected');
+        }
+
+        // Reload if date is selected
+        if (document.getElementById('availability-date').value) {
+            loadAvailability();
+        }
+    }
+
+    function loadAvailability() {
+        const date = document.getElementById('availability-date').value;
+        if (!date) {
+            alert('Please select a date');
+            return;
+        }
+
+        fetch(`/api/availability/${date}?sport=${selectedSport}`)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('availability-tbody');
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center">No slots available</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.map(slot => {
+                    let statusClass = 'available';
+                    let statusText = 'Available';
+                    if (!slot.available) {
+                        statusClass = 'booked';
+                        statusText = 'Booked';
+                    }
+
+                    return `
+                    <tr>
+                        <td>${slot.time}</td>
+                        <td>৳${slot.price}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>
+                            ${slot.available ?
+                            `<a href="/booking" class="btn btn-sm btn-primary">Book Now</a>` :
+                            '<span class="text-muted">Unavailable</span>'
+                        }
+                        </td>
+                    </tr>
+                `;
+                }).join('');
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error loading availability');
+            });
+    }
+
+    document.getElementById('auto-refresh').addEventListener('change', function () {
+        if (this.checked) {
+            autoRefreshInterval = setInterval(loadAvailability, 30000);
+        } else {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+    });
+
+    // Load availability when date changes
+    document.getElementById('availability-date').addEventListener('change', loadAvailability);
+</script>
+{% endblock %}

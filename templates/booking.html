@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Book Now - {{ settings.turf_name if settings else 'GAME ON BOGURA' }}{% endblock %}
+
+{% block content %}
+<div class="container booking-container">
+    <h1 class="page-title">Book Your Slot</h1>
+
+    <div class="booking-steps">
+        <div class="step active" data-step="1">
+            <div class="step-number">1</div>
+            <div class="step-label">Select Sport</div>
+        </div>
+        <div class="step" data-step="2">
+            <div class="step-number">2</div>
+            <div class="step-label">Select Date</div>
+        </div>
+        <div class="step" data-step="3">
+            <div class="step-number">3</div>
+            <div class="step-label">Choose Time Slot</div>
+        </div>
+        <div class="step" data-step="4">
+            <div class="step-number">4</div>
+            <div class="step-label">Fill Details</div>
+        </div>
+        <div class="step" data-step="5">
+            <div class="step-number">5</div>
+            <div class="step-label">Confirm</div>
+        </div>
+    </div>
+
+    <!-- Step 1: Sport Selection -->
+    <div class="booking-step-content" id="step-1">
+        <h2>Select Sport</h2>
+        <div class="sport-selection-container">
+            <div class="sport-card" onclick="selectSport('football')">
+                <div class="sport-icon"><i class="fas fa-futbol"></i></div>
+                <h3>Football Turf</h3>
+                <p>5-a-side / 7-a-side</p>
+            </div>
+            <div class="sport-card" onclick="selectSport('badminton')">
+                <div class="sport-icon"><i class="fas fa-table-tennis"></i></div>
+                <h3>Badminton Court</h3>
+                <p>Indoor Court</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: Date Selection -->
+    <div class="booking-step-content hidden" id="step-2">
+        <h2 id="date-step-title">Select Date for Football</h2>
+        <div class="date-picker-container">
+            <input type="date" id="booking-date" class="form-control" min="" required>
+            <p class="help-text">Select a date for your booking</p>
+        </div>
+        <div class="step-actions">
+            <button onclick="goToStep(1)" class="btn btn-secondary">Back</button>
+            <button onclick="goToStep(3)" class="btn btn-primary">Next</button>
+        </div>
+    </div>
+
+    <!-- Step 3: Time Slot Selection -->
+    <div class="booking-step-content hidden" id="step-3">
+        <h2>Choose Time Slot</h2>
+        <div id="slots-container" class="slots-grid">
+            <p class="loading">Loading slots...</p>
+        </div>
+        <div class="step-actions">
+            <button onclick="goToStep(2)" class="btn btn-secondary">Back</button>
+            <button onclick="goToStep(4)" class="btn btn-primary" id="next-step-3" disabled>Next</button>
+        </div>
+    </div>
+
+    <!-- Step 4: Booking Form -->
+    <div class="booking-step-content hidden" id="step-4">
+        <h2>Booking Details</h2>
+        <form id="booking-form" class="booking-form">
+            <div class="form-group">
+                <label>Selected Sport</label>
+                <input type="text" id="selected-sport-display" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+                <label>Selected Date</label>
+                <input type="text" id="selected-date-display" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+                <label>Selected Time Slot</label>
+                <input type="text" id="selected-slot-display" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+                <label>Amount</label>
+                <input type="text" id="selected-amount-display" class="form-control" readonly>
+            </div>
+            <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input type="text" id="name" name="name" class="form-control" required
+                    value="{{ (user.first_name ~ ' ' ~ user.last_name)|trim if user else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone Number *</label>
+                <input type="tel" id="phone" name="phone" class="form-control" required
+                    value="{{ user.phone if user else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="team_name">Team Name</label>
+                <input type="text" id="team_name" name="team_name" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="payment_method">Payment Method *</label>
+                <select id="payment_method" name="payment_method" class="form-control" required>
+                    <option value="">Select Payment Method</option>
+                    <option value="Cash">Cash</option>
+                    <option value="bKash">bKash</option>
+                    <option value="Nagad">Nagad</option>
+                </select>
+            </div>
+            <div class="form-group" id="transaction-id-group" style="display: none;">
+                <label for="transaction_id">Transaction ID</label>
+                <input type="text" id="transaction_id" name="transaction_id" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="notes">Additional Notes</label>
+                <textarea id="notes" name="notes" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="step-actions">
+                <button type="button" onclick="goToStep(3)" class="btn btn-secondary">Back</button>
+                <button type="submit" class="btn btn-primary">Confirm Booking</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Step 5: Confirmation -->
+    <div class="booking-step-content hidden" id="step-5">
+        <div class="confirmation-message">
+            <i class="fas fa-check-circle"></i>
+            <h2>Booking Confirmed!</h2>
+            <div id="confirmation-details"></div>
+            <div class="confirmation-actions">
+                <button onclick="window.print()" class="btn btn-secondary">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <button onclick="shareWhatsApp()" class="btn btn-success">
+                    <i class="fab fa-whatsapp"></i> Share on WhatsApp
+                </button>
+                <a href="{{ url_for('user.index') }}" class="btn btn-primary">Back to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedSport = ''; // 'football' or 'badminton'
+    let selectedDate = '';
+    let selectedSlot = null;
+    let selectedSlotId = '';
+    let selectedAmount = 0;
+    let bookingId = '';
+
+    // Set minimum date to tomorrow
+    document.getElementById('booking-date').min = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+    document.getElementById('payment_method').addEventListener('change', function () {
+        const transactionGroup = document.getElementById('transaction-id-group');
+        if (this.value === 'bKash' || this.value === 'Nagad') {
+            transactionGroup.style.display = 'block';
+        } else {
+            transactionGroup.style.display = 'none';
+        }
+    });
+
+    function selectSport(sport) {
+        selectedSport = sport;
+        // Update visual selection
+        document.querySelectorAll('.sport-card').forEach(c => c.classList.remove('selected'));
+        // Ideally we would highlight it, but let's just proceed for now or add a class if user validates
+
+        // Update next steps text if needed
+        document.getElementById('date-step-title').textContent = `Select Date for ${sport.charAt(0).toUpperCase() + sport.slice(1)}`;
+
+        goToStep(2);
+    }
+
+    function goToStep(step) {
+        // Hide all steps
+        document.querySelectorAll('.booking-step-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+
+        // Show current step
+        document.getElementById(`step-${step}`).classList.remove('hidden');
+        document.querySelector(`.step[data-step="${step}"]`).classList.add('active');
+
+        // Mark previous steps as active/completed (optional visual improvement)
+        for (let i = 1; i < step; i++) {
+            document.querySelector(`.step[data-step="${i}"]`).classList.add('active');
+        }
+
+        if (step === 3 && selectedDate && selectedSport) {
+            loadSlots(selectedDate);
+        }
+    }
+
+    document.getElementById('booking-date').addEventListener('change', function () {
+        selectedDate = this.value;
+        if (selectedDate) {
+            // Just enable next button or move logic is in LoadSlots when step 3 accessed
+        }
+    });
+
+    function loadSlots(date) {
+        const container = document.getElementById('slots-container');
+        container.innerHTML = '<p class="loading">Loading slots...</p>';
+
+        fetch(`/api/availability/${date}?sport=${selectedSport}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.length === 0) {
+                    container.innerHTML = '<p>No slots available</p>';
+                    return;
+                }
+
+                container.innerHTML = data.map(slot => `
+                <div class="slot-card ${slot.available ? 'available' : 'booked'}" 
+                     data-slot-id="${slot._id}" 
+                     data-time="${slot.time}" 
+                     data-price="${slot.price}"
+                     onclick="${slot.available ? `selectSlot('${slot._id}', '${slot.time}', ${slot.price})` : ''}">
+                    <div class="slot-time">${slot.time}</div>
+                    <div class="slot-price">৳${slot.price}</div>
+                    <div class="slot-status">${slot.available ? 'Available' : 'Booked'}</div>
+                </div>
+            `).join('');
+            })
+            .catch(err => {
+                container.innerHTML = '<p class="error">Error loading slots</p>';
+            });
+    }
+
+    function selectSlot(slotId, time, price) {
+        selectedSlotId = slotId;
+        selectedSlot = time;
+        selectedAmount = price;
+
+        // Update display
+        document.querySelectorAll('.slot-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        document.querySelector(`[data-slot-id="${slotId}"]`).classList.add('selected');
+
+        // Update form
+        document.getElementById('next-step-3').disabled = false;
+        document.getElementById('selected-sport-display').value = selectedSport.charAt(0).toUpperCase() + selectedSport.slice(1);
+        document.getElementById('selected-date-display').value = selectedDate;
+        document.getElementById('selected-slot-display').value = selectedSlot;
+        document.getElementById('selected-amount-display').value = `৳${selectedAmount}`;
+    }
+
+    document.getElementById('booking-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = {
+            date: selectedDate,
+            time_slot: selectedSlotId,
+            name: document.getElementById('name').value,
+            phone: document.getElementById('phone').value,
+            team_name: document.getElementById('team_name').value,
+            payment_method: document.getElementById('payment_method').value,
+            transaction_id: document.getElementById('transaction_id').value,
+            notes: document.getElementById('notes').value
+        };
+
+        fetch('/api/book', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    bookingId = data.booking_id;
+                    showConfirmation(data.booking);
+                } else {
+                    alert(data.error || 'Booking failed');
+                }
+            })
+            .catch(err => {
+                alert('Error creating booking');
+            });
+    });
+
+    function showConfirmation(booking) {
+        goToStep(5);
+        document.getElementById('confirmation-details').innerHTML = `
+        <div class="confirmation-info">
+            <p><strong>Booking ID:</strong> ${booking._id}</p>
+            <p><strong>Date:</strong> ${booking.date}</p>
+            <p><strong>Time Slot:</strong> ${selectedSlot}</p>
+            <p><strong>Name:</strong> ${booking.name}</p>
+            <p><strong>Phone:</strong> ${booking.phone}</p>
+            <p><strong>Amount:</strong> ৳${booking.amount}</p>
+            <p><strong>Payment Method:</strong> ${booking.payment_method}</p>
+            <p><strong>Status:</strong> ${booking.status}</p>
+        </div>
+    `;
+    }
+
+    function shareWhatsApp() {
+        const whatsapp = "{{ settings.whatsapp if settings and settings.whatsapp else '' }}";
+        const message = `Booking Confirmed!\nBooking ID: ${bookingId}\nDate: ${selectedDate}\nTime: ${selectedSlot}\nAmount: ৳${selectedAmount}`;
+        const url = `https://wa.me/${whatsapp.replace('+', '').replace(' ', '')}?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    }
+</script>
+{% endblock %}

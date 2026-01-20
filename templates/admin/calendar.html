@@ -1,0 +1,112 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Calendar View{% endblock %}
+
+{% block content %}
+<div class="calendar-container">
+    <div class="calendar-controls">
+        <button onclick="previousMonth()" class="btn btn-secondary">
+            <i class="fas fa-chevron-left"></i> Previous
+        </button>
+        <h2 id="calendar-month-year"></h2>
+        <button onclick="nextMonth()" class="btn btn-secondary">
+            Next <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+    
+    <div id="calendar-grid" class="calendar-grid"></div>
+    
+    <div class="calendar-legend">
+        <span><span class="legend-box available"></span> Available</span>
+        <span><span class="legend-box booked"></span> Booked</span>
+        <span><span class="legend-box pending"></span> Pending</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentDate = new Date();
+
+function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    document.getElementById('calendar-month-year').textContent = 
+        new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = '';
+    
+    // Day headers
+    const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    dayHeaders.forEach(day => {
+        const header = document.createElement('div');
+        header.className = 'calendar-day-header';
+        header.textContent = day;
+        grid.appendChild(header);
+    });
+    
+    // Empty cells for days before month starts
+    for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'calendar-day empty';
+        grid.appendChild(empty);
+    }
+    
+    // Days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayCell = document.createElement('div');
+        dayCell.className = 'calendar-day';
+        dayCell.textContent = day;
+        
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        dayCell.setAttribute('data-date', dateStr);
+        
+        // Load bookings for this date
+        loadDayBookings(dateStr, dayCell);
+        
+        grid.appendChild(dayCell);
+    }
+}
+
+function loadDayBookings(date, dayCell) {
+    fetch(`/api/availability/${date}`)
+        .then(res => res.json())
+        .then(data => {
+            const booked = data.filter(s => !s.available).length;
+            const total = data.length;
+            
+            if (booked > 0) {
+                dayCell.classList.add('has-bookings');
+                dayCell.innerHTML = `
+                    <div class="day-number">${dayCell.textContent}</div>
+                    <div class="day-bookings">${booked}/${total}</div>
+                `;
+            }
+        })
+        .catch(err => console.error(err));
+}
+
+function previousMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+}
+
+function nextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+}
+
+renderCalendar();
+</script>
+{% endblock %}
+
+
+
+
+
+

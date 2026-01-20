@@ -1,0 +1,83 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-calendar-day"></i></div>
+        <div class="stat-content">
+            <h3>{{ today_bookings }}</h3>
+            <p>Today's Bookings</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+        <div class="stat-content">
+            <h3>{{ upcoming_bookings }}</h3>
+            <p>Upcoming Bookings</p>
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+        <div class="stat-content">
+            <h3>৳{{ total_earnings }}</h3>
+            <p>Total Earnings</p>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-sections">
+    <div class="dashboard-section">
+        <h2>Recent Bookings</h2>
+        <div class="table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in recent_bookings %}
+                    <tr>
+                        <td>{{ booking._id }}</td>
+                        <td>{{ booking.date }}</td>
+                        <td>{{ booking.get('slot_time', 'N/A') }}</td>
+                        <td>{{ booking.name }}</td>
+                        <td>{{ booking.phone }}</td>
+                        <td>৳{{ booking.amount }}</td>
+                        <td><span class="status-badge {{ booking.status }}">{{ booking.status|title }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="dashboard-section">
+        <h2>Popular Time Slots</h2>
+        <div class="popular-slots">
+            {% for slot_data in popular_slots %}
+            <div class="popular-slot-item">
+                <span>Slot ID: {{ slot_data._id }}</span>
+                <span class="badge">{{ slot_data.count }} bookings</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+

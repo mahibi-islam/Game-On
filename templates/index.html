@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+
+{% block title %}Home - GAME ON BOGURA {% endblock %}
+
+{% block content %}
+<section class="hero" id="home-hero">
+    <div class="hero-slides">
+        {% if settings and settings.carousel_images %}
+        {% for image in settings.carousel_images %}
+        <div class="hero-slide {% if loop.first %}active{% endif %}"
+            style="background-image: url('{{ url_for('static', filename='carousel/' + image) }}');"></div>
+        {% endfor %}
+        {% else %}
+        <div class="hero-slide active"
+            style="background-image: url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1600');"></div>
+        {% endif %}
+    </div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content" data-aos="fade-up">
+        <h1>Welcome to <span class="nav-brand">GAME ON BOGURA</span></h1>
+        <p class="lead">Experience premium turf booking with instant confirmations.</p>
+        <div class="hero-actions">
+            <a href="{{ url_for('user.booking') }}" class="btn btn-primary btn-large pulse-animation">
+                <i class="fas fa-calendar-check"></i> Book Your Slot
+            </a>
+            <a href="{{ url_for('user.pricing') }}" class="btn btn-secondary btn-large">
+                <i class="fas fa-tags"></i> View Pricing
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+    .hero {
+        background: none !important;
+        /* Override default background */
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-slides {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -2;
+    }
+
+    .hero-slide {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+        opacity: 0;
+        transition: opacity 1.5s ease-in-out;
+        transform: scale(1.1);
+        /* Gentle zoom effect */
+        animation: zoomEffect 20s infinite alternate;
+    }
+
+    .hero-slide.active {
+        opacity: 1;
+    }
+
+    @keyframes zoomEffect {
+        from {
+            transform: scale(1);
+        }
+
+        to {
+            transform: scale(1.1);
+        }
+    }
+
+    /* Ensure existing overlay works */
+    .hero-overlay {
+        background: rgba(10, 10, 42, 0.7);
+        /* Match existing overlay color */
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const slides = document.querySelectorAll('.hero-slide');
+        let currentSlide = 0;
+
+        if (slides.length > 1) {
+            setInterval(() => {
+                slides[currentSlide].classList.remove('active');
+                currentSlide = (currentSlide + 1) % slides.length;
+                slides[currentSlide].classList.add('active');
+            }, 5000); // Change slide every 5 seconds
+        }
+    });
+</script>
+
+<section class="featured-carousel-section" data-aos="fade-up">
+    <div class="container-fluid p-0">
+        <div class="swiper featured-swiper">
+            <div class="swiper-wrapper">
+                {% if settings and settings.carousel_images %}
+                {% for image in settings.carousel_images %}
+                <div class="swiper-slide">
+                    <div class="featured-image-container">
+                        <img src="{{ url_for('static', filename='carousel/' + image) }}" alt="Turf Image">
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <!-- Default images if none uploaded -->
+                <div class="swiper-slide">
+                    <div class="featured-image-container">
+                        <img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800" alt="Default 1">
+                    </div>
+                </div>
+                <div class="swiper-slide">
+                    <div class="featured-image-container">
+                        <img src="https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=800" alt="Default 2">
+                    </div>
+                </div>
+                <div class="swiper-slide">
+                    <div class="featured-image-container">
+                        <img src="https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800" alt="Default 3">
+                    </div>
+                </div>
+                <div class="swiper-slide">
+                    <div class="featured-image-container">
+                        <img src="https://images.unsplash.com/photo-1552667466-07770ae110d0?w=800" alt="Default 4">
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="swiper-pagination"></div>
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .featured-carousel-section {
+        padding: 0;
+        /* Full width overlap if desired, or margin */
+        background: var(--bg-dark);
+        margin-bottom: 2rem;
+    }
+
+    .featured-swiper {
+        width: 100%;
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+    }
+
+    .featured-image-container {
+        width: 100%;
+        height: 300px;
+        border-radius: 15px;
+        overflow: hidden;
+        border: 1px solid var(--glass-border);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s;
+    }
+
+    .swiper-slide {
+        background-position: center;
+        background-size: cover;
+        width: 400px;
+        /* Base width for 'auto' or specific per view */
+        /* Center slides */
+        display: flex;
+        justify-content: center;
+    }
+
+    .swiper-slide img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .swiper-slide-active .featured-image-container {
+        transform: scale(1.05);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+    }
+
+    .swiper-pagination-bullet {
+        background: var(--text-secondary);
+    }
+
+    .swiper-pagination-bullet-active {
+        background: var(--primary-color);
+    }
+
+    .swiper-button-next,
+    .swiper-button-prev {
+        color: var(--primary-color);
+    }
+
+    @media (max-width: 768px) {
+        .featured-image-container {
+            height: 200px;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var swiper = new Swiper(".featured-swiper", {
+            effect: "coverflow",
+            grabCursor: true,
+            centeredSlides: true,
+            slidesPerView: "auto",
+            loop: true,
+            coverflowEffect: {
+                rotate: 0,
+                stretch: 0,
+                depth: 100,
+                modifier: 2,
+                slideShadows: true,
+            },
+            autoplay: {
+                delay: 2500,
+                disableOnInteraction: false,
+            },
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
+            },
+            navigation: {
+                nextEl: ".swiper-button-next",
+                prevEl: ".swiper-button-prev",
+            },
+            breakpoints: {
+                640: {
+                    slidesPerView: 1,
+                    spaceBetween: 20,
+                },
+                768: {
+                    slidesPerView: 2,
+                    spaceBetween: 40,
+                },
+                1024: {
+                    slidesPerView: 3,
+                    spaceBetween: 50,
+                },
+            },
+        });
+    });
+</script>
+
+<section class="highlights">
+    <div class="container">
+        <h2 class="section-title" data-aos="fade-up">Why Play Here?</h2>
+        <div class="highlights-grid">
+            <div class="highlight-card" data-aos="fade-up" data-aos-delay="100">
+                <i class="fas fa-lightbulb"></i>
+                <h3>Pro LED Lighting</h3>
+                <p>Stadium-grade lighting for perfect night matches.</p>
+            </div>
+            <div class="highlight-card" data-aos="fade-up" data-aos-delay="200">
+                <i class="fas fa-car"></i>
+                <h3>Secure Parking</h3>
+                <p>Ample space for your entire team's vehicles.</p>
+            </div>
+            <div class="highlight-card" data-aos="fade-up" data-aos-delay="300">
+                <i class="fas fa-shower"></i>
+                <h3>Premium Amenities</h3>
+                <p>Clean washrooms and changing facilities.</p>
+            </div>
+            <div class="highlight-card" data-aos="fade-up" data-aos-delay="400">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Secure Venue</h3>
+                <p>24/7 CCTV surveillance for your safety.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="quick-availability" data-aos="zoom-in">
+    <div class="container">
+        <h2 class="section-title">Check Availability</h2>
+        <div class="availability-preview">
+            <div class="sport-selection-container small-cards">
+                <div class="sport-card selected" onclick="selectQuickSport('football', this)">
+                    <div class="sport-icon"><i class="fas fa-futbol"></i></div>
+                    <h3>Football</h3>
+                </div>
+                <div class="sport-card" onclick="selectQuickSport('badminton', this)">
+                    <div class="sport-icon"><i class="fas fa-table-tennis"></i></div>
+                    <h3>Badminton</h3>
+                </div>
+            </div>
+            <div class="form-group">
+                <input type="date" id="quick-date" class="form-control" min="">
+            </div>
+            <button onclick="checkQuickAvailability()" class="btn btn-primary">
+                Search Slots <i class="fas fa-search"></i>
+            </button>
+            <div id="quick-availability-result" class="availability-result"></div>
+        </div>
+    </div>
+</section>
+
+{% if testimonials %}
+<section class="testimonials">
+    <div class="container">
+        <h2 class="section-title" data-aos="fade-up">Player Reviews</h2>
+        <div class="testimonials-grid">
+            {% for testimonial in testimonials %}
+            <div class="testimonial-card" data-aos="flip-left" data-aos-delay="{{ loop.index * 100 }}">
+                <div class="testimonial-rating">
+                    {% for i in range(testimonial.get('rating', 5)) %}
+                    <i class="fas fa-star text-warning"></i>
+                    {% endfor %}
+                </div>
+                <p class="testimonial-text">"{{ testimonial.get('text', '') }}"</p>
+                <div class="testimonial-author">
+                    <i class="fas fa-user-circle"></i> {{ testimonial.get('author', 'Anonymous') }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<section class="location" data-aos="fade-up">
+    <div class="container">
+        <h2 class="section-title">Location</h2>
+        <div class="map-container glass-map">
+            <iframe
+                src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d452.6320298168447!2d89.3657475!3d24.8277503!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39fc55006b6c9c99%3A0xed4fc12bada09a6!2sGame%20ON%20Bogura!5e0!3m2!1sen!2sbd!4v1765229343848!5m2!1sen!2sbd"
+                width="100%" height="400" style="border:0;" allowfullscreen="" loading="lazy">
+            </iframe>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedQuickSport = 'football';
+
+    function selectQuickSport(sport, element) {
+        selectedQuickSport = sport;
+        document.querySelectorAll('.small-cards .sport-card').forEach(c => c.classList.remove('selected'));
+        element.classList.add('selected');
+    }
+
+    function checkQuickAvailability() {
+        const date = document.getElementById('quick-date').value;
+        if (!date) {
+            alert('Please select a date');
+            return;
+        }
+
+        fetch(`/api/availability/${date}?sport=${selectedQuickSport}`)
+            .then(res => res.json())
+            .then(data => {
+                const resultDiv = document.getElementById('quick-availability-result');
+                if (data.length === 0) {
+                    resultDiv.innerHTML = '<p class="text-center">No slots found for this date.</p>';
+                    return;
+                }
+
+                resultDiv.innerHTML = `
+                <h3 class="text-center" style="margin: 1rem 0; color: var(--primary-color);">
+                    ${date} (${selectedQuickSport.charAt(0).toUpperCase() + selectedQuickSport.slice(1)})
+                </h3>
+                <div class="slots-grid">
+                    ${data.map(slot => `
+                        <div class="slot-card ${slot.available ? 'available' : 'booked'}">
+                            <div class="slot-time">${slot.time}</div>
+                            <div class="slot-price">৳${slot.price}</div>
+                            <div class="slot-status">${slot.available ? 'Available' : 'Booked'}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="text-center" style="margin-top: 1.5rem;">
+                    <a href="/booking" class="btn btn-primary pulse-animation">Book Now</a>
+                </div>
+                `;
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Error checking availability');
+            });
+    }
+
+    // Set minimum date to tomorrow
+    document.getElementById('quick-date').min = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+</script>
+{% endblock %}

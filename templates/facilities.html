@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Facilities - {{ settings.turf_name if settings else 'GAME ON BOGURA' }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Our Facilities</h1>
+    
+    <div class="facilities-grid">
+        <div class="facility-card">
+            <div class="facility-icon">
+                <i class="fas fa-ruler-combined"></i>
+            </div>
+            <h3>Turf Size</h3>
+            <p>Full-size professional turf (70m x 50m) suitable for 8v8 matches</p>
+        </div>
+        
+        <div class="facility-card">
+            <div class="facility-icon">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            <h3>LED Lighting</h3>
+            <p>State-of-the-art LED floodlights for excellent visibility during night games</p>
+        </div>
+        
+        <div class="facility-card">
+            <div class="facility-icon">
+                <i class="fas fa-restroom"></i>
+            </div>
+            <h3>Washroom Facilities</h3>
+            <p>Clean and well-maintained washrooms with changing rooms</p>
+        </div>
+        
+        <div class="facility-card">
+            <div class="facility-icon">
+                <i class="fas fa-chair"></i>
+            </div>
+            <h3>Sitting Area</h3>
+            <p>Comfortable seating area for spectators and players</p>
+        </div>
+        
+        <div class="facility-card">
+            <div class="facility-icon">
+                <i class="fas fa-car"></i>
+            </div>
+            <h3>Parking</h3>
+            <p>Free parking space available for all visitors</p>
+        </div>
+        
+        <div class="facility-card">
+            <div class="facility-icon">
+                <i class="fas fa-futbol"></i>
+            </div>
+            <h3>Outdoor Turf</h3>
+            <p>Premium quality artificial grass surface</p>
+        </div>
+        
+        <div class="facility-card">
+            <div class="facility-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3>Security</h3>
+            <p>24/7 security and CCTV surveillance</p>
+        </div>
+        
+        <div class="facility-card">
+            <div class="facility-icon">
+                <i class="fas fa-water"></i>
+            </div>
+            <h3>Water Facility</h3>
+            <p>Drinking water available on-site</p>
+        </div>
+    </div>
+    
+    {% if settings and settings.rules %}
+    <div class="rules-section">
+        <h2>Rules & Regulations</h2>
+        <div class="rules-content">
+            <p>{{ settings.rules }}</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

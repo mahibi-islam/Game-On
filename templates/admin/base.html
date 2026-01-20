@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="admin-body">
+    <div class="admin-sidebar">
+        <div class="admin-sidebar-header">
+            <i class="fas fa-futbol"></i>
+            <span>Admin Panel</span>
+        </div>
+        <nav class="admin-nav">
+            <a href="{{ url_for('admin.dashboard') }}" class="admin-nav-item">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <a href="{{ url_for('admin.bookings') }}" class="admin-nav-item">
+                <i class="fas fa-calendar-check"></i> Bookings
+            </a>
+            <a href="{{ url_for('admin.slots') }}" class="admin-nav-item">
+                <i class="fas fa-clock"></i> Time Slots
+            </a>
+            <a href="{{ url_for('admin.calendar') }}" class="admin-nav-item">
+                <i class="fas fa-calendar"></i> Calendar
+            </a>
+            <a href="{{ url_for('admin.gallery') }}" class="admin-nav-item">
+                <i class="fas fa-images"></i> Gallery
+            </a>
+            <a href="{{ url_for('admin.payments') }}" class="admin-nav-item">
+                <i class="fas fa-money-bill-wave"></i> Payments
+            </a>
+            <a href="{{ url_for('admin.settings') }}" class="admin-nav-item">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+            <a href="{{ url_for('admin.export') }}" class="admin-nav-item">
+                <i class="fas fa-file-excel"></i> Export Excel
+            </a>
+            <a href="{{ url_for('admin.logout') }}" class="admin-nav-item">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </nav>
+    </div>
+    
+    <div class="admin-content">
+        <div class="admin-header">
+            <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+            <div class="admin-user">
+                <i class="fas fa-user"></i>
+                <span>{{ session.get('admin_username', 'Admin') }}</span>
+            </div>
+        </div>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">
+                            {{ message }}
+                            <span class="flash-close">&times;</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

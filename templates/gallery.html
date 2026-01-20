@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Gallery - {{ settings.turf_name if settings else 'GAME ON BOGURA' }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="page-title">Gallery</h1>
+    
+    {% if images %}
+    <div class="gallery-section">
+        <h2>Photos</h2>
+        <div class="gallery-grid">
+            {% for image in images %}
+            <div class="gallery-item">
+                <img src="{{ url_for('static', filename=image.path) }}" alt="Gallery Image" onclick="openLightbox('{{ url_for('static', filename=image.path) }}')">
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if videos %}
+    <div class="gallery-section">
+        <h2>Videos</h2>
+        <div class="video-grid">
+            {% for video in videos %}
+            <div class="video-item">
+                <video controls>
+                    <source src="{{ url_for('static', filename=video.path) }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if not images and not videos %}
+    <div class="empty-gallery">
+        <i class="fas fa-images"></i>
+        <p>No gallery items available yet</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Lightbox Modal -->
+<div id="lightbox" class="lightbox" onclick="closeLightbox()">
+    <span class="lightbox-close">&times;</span>
+    <img id="lightbox-img" src="" alt="Gallery Image">
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openLightbox(src) {
+    document.getElementById('lightbox-img').src = src;
+    document.getElementById('lightbox').style.display = 'flex';
+}
+
+function closeLightbox() {
+    document.getElementById('lightbox').style.display = 'none';
+}
+</script>
+{% endblock %}
+

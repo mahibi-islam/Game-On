@@ -1,0 +1,76 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Payments Management{% endblock %}
+
+{% block content %}
+<div class="table-container">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Booking ID</th>
+                <th>Date</th>
+                <th>Time Slot</th>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Amount</th>
+                <th>Payment Method</th>
+                <th>Transaction ID</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            <tr>
+                <td>{{ booking._id }}</td>
+                <td>{{ booking.date }}</td>
+                <td>{{ booking.get('slot_time', 'N/A') }}</td>
+                <td>{{ booking.name }}</td>
+                <td>{{ booking.phone }}</td>
+                <td>৳{{ booking.amount }}</td>
+                <td>{{ booking.payment_method }}</td>
+                <td>{{ booking.get('transaction_id', '-') }}</td>
+                <td><span class="status-badge {{ booking.status }}">{{ booking.status|title }}</span></td>
+                <td>
+                    {% if booking.status != 'paid' %}
+                    <button onclick="markAsPaid('{{ booking._id }}')" class="btn btn-sm btn-success">Mark as Paid</button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function markAsPaid(bookingId) {
+    if (!confirm('Mark this booking as paid?')) {
+        return;
+    }
+    
+    fetch(`/admin/booking/${bookingId}/paid`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error updating payment status');
+        }
+    })
+    .catch(err => {
+        alert('Error updating payment status');
+    });
+}
+</script>
+{% endblock %}
+
+
+
+
+
+
