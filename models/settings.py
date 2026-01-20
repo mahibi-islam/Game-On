@@ -28,11 +28,11 @@ class Settings:
         if not Settings.find_one():
             Settings.get_collection().insert_one({
                 'turf_name': 'GAME ON BOGURA',
-                'address': '123 Main Street, City',
-                'phone': '+8801234567890',
-                'whatsapp': '+8801234567890',
+                'address': 'Gohail Road,Bogura',
+                'phone': '+8801780-037275',
+                'whatsapp': '+8801780-037275',
                 'email': 'info@turf.com',
-                'facebook': 'https://facebook.com/turf',
+                'facebook': 'https://www.facebook.com/share/1ADMmWtRMw/',
                 'rules': 'Please maintain cleanliness. No smoking allowed.',
                 'homepage_content': 'Welcome to GAME ON BOGURA!'
             })
