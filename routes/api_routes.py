@@ -90,6 +90,9 @@ def create_booking():
         
         booking = Booking.create(booking_data)
         
+        from flask import flash
+        flash('Booking confirmed! Thank you for choosing us.', 'success')
+        
         return jsonify({
             'success': True,
             'booking_id': booking['_id'],
