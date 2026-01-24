@@ -29,8 +29,8 @@ class Settings:
             Settings.get_collection().insert_one({
                 'turf_name': 'GAME ON BOGURA',
                 'address': 'Gohail Road,Bogura',
-                'phone': '+8801780-037275',
-                'whatsapp': '+8801780-037275',
+                'phone': '+8801780037275',
+                'whatsapp': '+8801780037275',
                 'email': 'info@turf.com',
                 'facebook': 'https://www.facebook.com/share/1ADMmWtRMw/',
                 'rules': 'Please maintain cleanliness. No smoking allowed.',

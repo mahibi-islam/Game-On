@@ -222,12 +222,18 @@
 
                 container.innerHTML = data.map(slot => `
                 <div class="slot-card ${slot.available ? 'available' : 'booked'}" 
-                     data-slot-id="${slot._id}" 
-                     data-time="${slot.time}" 
-                     data-price="${slot.price}"
-                     onclick="${slot.available ? `selectSlot('${slot._id}', '${slot.time}', ${slot.price})` : ''}">
+                      data-slot-id="${slot._id}" 
+                      data-time="${slot.time}" 
+                      data-price="${slot.price}"
+                      onclick="${slot.available ? `selectSlot('${slot._id}', '${slot.time}', ${slot.price}, ${slot.discount_active}, ${slot.discount_percent})` : ''}">
                     <div class="slot-time">${slot.time}</div>
-                    <div class="slot-price">৳${slot.price}</div>
+                    <div class="slot-price">
+                        ${slot.discount_active ?
+                        `<span style="text-decoration: line-through; color: #888; font-size: 0.8em;">৳${slot.price}</span> ৳${slot.price * (1 - slot.discount_percent / 100)}
+                             <div style="font-size: 0.7em; color: var(--primary-color);">(${slot.discount_percent}% OFF)</div>` :
+                        `৳${slot.price}`
+                    }
+                    </div>
                     <div class="slot-status">${slot.available ? 'Available' : 'Booked'}</div>
                 </div>
             `).join('');
@@ -237,10 +243,10 @@
             });
     }
 
-    function selectSlot(slotId, time, price) {
+    function selectSlot(slotId, time, price, discountActive, discountPercent) {
         selectedSlotId = slotId;
         selectedSlot = time;
-        selectedAmount = price;
+        selectedAmount = discountActive ? (price * (1 - discountPercent / 100)) : price;
 
         // Update display
         document.querySelectorAll('.slot-card').forEach(card => {

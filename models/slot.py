@@ -16,7 +16,9 @@ class Slot:
             'time': data.get('time'),
             'price': float(data.get('price')),
             'sport': data.get('sport', 'football'),
-            'enabled': data.get('enabled', True)
+            'enabled': data.get('enabled', True),
+            'discount_active': data.get('discount_active', False),
+            'discount_percent': float(data.get('discount_percent', 0.0))
         }
         result = Slot.get_collection().insert_one(slot_data)
         slot_data['_id'] = str(result.inserted_id)

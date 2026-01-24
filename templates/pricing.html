@@ -32,7 +32,17 @@
                     {% for slot in football_slots %}
                     <tr>
                         <td>{{ slot.time }}</td>
-                        <td class="price-cell">৳{{ slot.price }}</td>
+                        <td class="price-cell">
+                            {% if slot.discount_active %}
+                            <span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳{{ slot.price
+                                }}</span>
+                            <span>৳{{ slot.price * (1 - slot.discount_percent / 100) }}</span>
+                            <div style="font-size: 0.7em; color: var(--primary-color);">({{ slot.discount_percent }}%
+                                OFF)</div>
+                            {% else %}
+                            ৳{{ slot.price }}
+                            {% endif %}
+                        </td>
                         <td>90 Minutes</td>
                     </tr>
                     {% endfor %}
@@ -56,7 +66,17 @@
                     {% for slot in badminton_slots %}
                     <tr>
                         <td>{{ slot.time }}</td>
-                        <td class="price-cell">৳{{ slot.price }}</td>
+                        <td class="price-cell">
+                            {% if slot.discount_active %}
+                            <span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳{{ slot.price
+                                }}</span>
+                            <span>৳{{ slot.price * (1 - slot.discount_percent / 100) }}</span>
+                            <div style="font-size: 0.7em; color: var(--primary-color);">({{ slot.discount_percent }}%
+                                OFF)</div>
+                            {% else %}
+                            ৳{{ slot.price }}
+                            {% endif %}
+                        </td>
                         <td>60 Minutes</td>
                     </tr>
                     {% endfor %}

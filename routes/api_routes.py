@@ -14,7 +14,9 @@ def get_slots():
         '_id': str(slot['_id']),
         'time': slot['time'],
         'price': slot['price'],
-        'sport': slot.get('sport', 'football')
+        'sport': slot.get('sport', 'football'),
+        'discount_active': slot.get('discount_active', False),
+        'discount_percent': slot.get('discount_percent', 0)
     } for slot in slots])
 
 @api_bp.route('/availability/<date>')
@@ -41,6 +43,8 @@ def get_availability(date):
                 'time': slot['time'],
                 'price': slot['price'],
                 'sport': slot.get('sport', 'football'),
+                'discount_active': slot.get('discount_active', False),
+                'discount_percent': slot.get('discount_percent', 0),
                 'available': not is_booked
             })
         
@@ -78,7 +82,7 @@ def create_booking():
             'team_name': data.get('team_name', ''),
             'payment_method': data.get('payment_method'),
             'transaction_id': data.get('transaction_id', ''),
-            'amount': slot['price'],
+            'amount': slot['price'] * (1 - float(slot.get('discount_percent', 0)) / 100) if slot.get('discount_active') else slot['price'],
             'status': 'pending',
             'notes': data.get('notes', ''),
             'user_id': str(session.get('user_id')) if session.get('user_id') else None

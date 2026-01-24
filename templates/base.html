@@ -80,10 +80,15 @@
                             <i class="fab fa-whatsapp"></i> WhatsApp
                         </a></p>
                     {% endif %}
+                    {% if settings and settings.facebook %}
+                    <p><a href="{{ settings.facebook }}" target="_blank">
+                            <i class="fab fa-facebook"></i> Facebook
+                        </a></p>
+                    {% endif %}
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 {{ settings.turf_name if settings else 'GAME ON BOGURA' }}. All rights reserved.</p>
+                <p>&copy; 2026 {{ settings.turf_name if settings else 'GAME ON BOGURA' }}. All rights reserved.</p>
             </div>
         </div>
     </footer>

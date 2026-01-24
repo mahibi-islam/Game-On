@@ -186,7 +186,7 @@ def create_manual_booking():
             'team_name': data.get('team_name', ''),
             'payment_method': data.get('payment_method'),
             'transaction_id': data.get('transaction_id', ''),
-            'amount': slot['price'],
+            'amount': slot['price'] * (1 - float(slot.get('discount_percent', 0)) / 100) if slot.get('discount_active') else slot['price'],
             'status': 'approved',
             'notes': data.get('notes', '')
         }
@@ -204,8 +204,9 @@ def create_manual_booking():
 @admin_required
 def slots():
     """View all slots"""
-    slots_list = Slot.find_all(sort=[('time', 1)])
-    return render_template('admin/slots.html', slots=slots_list)
+    football_slots = Slot.find_all({'sport': 'football'}, sort=[('time', 1)])
+    badminton_slots = Slot.find_all({'sport': 'badminton'}, sort=[('time', 1)])
+    return render_template('admin/slots.html', football_slots=football_slots, badminton_slots=badminton_slots)
 
 @admin_bp.route('/slot/create', methods=['POST'])
 @admin_required
@@ -223,7 +224,10 @@ def update_slot(slot_id):
     Slot.update(slot_id, {
         'time': data.get('time'),
         'price': float(data.get('price')),
-        'enabled': data.get('enabled', True)
+        'sport': data.get('sport', 'football'),
+        'enabled': data.get('enabled', True),
+        'discount_active': data.get('discount_active', False),
+        'discount_percent': float(data.get('discount_percent', 0.0))
     })
     return jsonify({'success': True})
 

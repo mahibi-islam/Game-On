@@ -122,7 +122,14 @@
                     return `
                     <tr>
                         <td>${slot.time}</td>
-                        <td>৳${slot.price}</td>
+                        <td>
+                            ${slot.discount_active ?
+                            `<span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳${slot.price}</span>
+                                 <span style="color: var(--primary-color); font-weight: bold;">৳${slot.price * (1 - slot.discount_percent / 100)}</span>
+                                 <div style="font-size: 0.8em; color: var(--primary-color);">(${slot.discount_percent}% OFF)</div>` :
+                            `৳${slot.price}`
+                        }
+                        </td>
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                         <td>
                             ${slot.available ?

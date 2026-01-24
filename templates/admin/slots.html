@@ -9,33 +9,94 @@
     </button>
 </div>
 
-<div class="table-container">
-    <table class="admin-table">
-        <thead>
-            <tr>
-                <th>Time Slot</th>
-                <th>Price (BDT)</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for slot in slots %}
-            <tr>
-                <td>{{ slot.time }}</td>
-                <td>৳{{ slot.price }}</td>
-                <td>
-                    <span class="status-badge {{ 'enabled' if slot.enabled else 'disabled' }}">
-                        {{ 'Enabled' if slot.enabled else 'Disabled' }}
-                    </span>
-                </td>
-                <td>
-                    <button onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }})" class="btn btn-sm btn-primary">Edit</button>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="slots-container">
+    <section class="slot-section">
+        <h2 class="section-title"><i class="fas fa-futbol"></i> Football Slots</h2>
+        <div class="table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Time Slot</th>
+                        <th>Price (BDT)</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot in football_slots %}
+                    <tr>
+                        <td>{{ slot.time }}</td>
+                        <td>
+                            {% if slot.discount_active %}
+                            <span style="text-decoration: line-through; color: #888;">৳{{ slot.price }}</span>
+                            <span style="color: var(--primary-color); font-weight: bold;">৳{{ slot.price * (1 -
+                                slot.discount_percent / 100) }}</span>
+                            <div style="font-size: 0.8em; color: var(--primary-color);">({{ slot.discount_percent }}%
+                                OFF)</div>
+                            {% else %}
+                            ৳{{ slot.price }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge {{ 'enabled' if slot.enabled else 'disabled' }}">
+                                {{ 'Enabled' if slot.enabled else 'Disabled' }}
+                            </span>
+                        </td>
+                        <td>
+                            <button
+                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'football')"
+                                class="btn btn-sm btn-primary">Edit</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="slot-section spacer" style="margin-top: 3rem;">
+        <h2 class="section-title"><i class="fas fa-table-tennis"></i> Badminton Slots</h2>
+        <div class="table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Time Slot</th>
+                        <th>Price (BDT)</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot in badminton_slots %}
+                    <tr>
+                        <td>{{ slot.time }}</td>
+                        <td>
+                            {% if slot.discount_active %}
+                            <span style="text-decoration: line-through; color: #888;">৳{{ slot.price }}</span>
+                            <span style="color: var(--primary-color); font-weight: bold;">৳{{ slot.price * (1 -
+                                slot.discount_percent / 100) }}</span>
+                            <div style="font-size: 0.8em; color: var(--primary-color);">({{ slot.discount_percent }}%
+                                OFF)</div>
+                            {% else %}
+                            ৳{{ slot.price }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge {{ 'enabled' if slot.enabled else 'disabled' }}">
+                                {{ 'Enabled' if slot.enabled else 'Disabled' }}
+                            </span>
+                        </td>
+                        <td>
+                            <button
+                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'badminton')"
+                                class="btn btn-sm btn-primary">Edit</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>
 
 <!-- Create/Edit Slot Modal -->
@@ -45,6 +106,13 @@
         <h2 id="modal-title">Add New Slot</h2>
         <form id="slotForm">
             <input type="hidden" id="slot-id">
+            <div class="form-group">
+                <label for="slot-sport">Sport *</label>
+                <select id="slot-sport" class="form-control" required>
+                    <option value="football">Football</option>
+                    <option value="badminton">Badminton</option>
+                </select>
+            </div>
             <div class="form-group">
                 <label for="slot-time">Time Slot (e.g., 06:00-07:00) *</label>
                 <input type="text" id="slot-time" class="form-control" required>
@@ -58,6 +126,19 @@
                     <input type="checkbox" id="slot-enabled" checked> Enabled
                 </label>
             </div>
+            <div class="form-group"
+                style="margin-top: 1rem; padding: 1rem; border: 1px dashed var(--glass-border); border-radius: 8px;">
+                <h3>Discount Settings</h3>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="slot-discount-active"> Enable Discount
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="slot-discount-percent">Discount Percentage (%)</label>
+                    <input type="number" id="slot-discount-percent" class="form-control" step="0.1" min="0" max="100">
+                </div>
+            </div>
             <div class="form-actions">
                 <button type="button" onclick="closeSlotModal()" class="btn btn-secondary">Cancel</button>
                 <button type="submit" class="btn btn-primary">Save</button>
@@ -69,74 +150,77 @@
 
 {% block extra_js %}
 <script>
-let editingSlotId = null;
+    let editingSlotId = null;
 
-function showCreateSlotModal() {
-    editingSlotId = null;
-    document.getElementById('modal-title').textContent = 'Add New Slot';
-    document.getElementById('slot-id').value = '';
-    document.getElementById('slot-time').value = '';
-    document.getElementById('slot-price').value = '';
-    document.getElementById('slot-enabled').checked = true;
-    document.getElementById('slotModal').style.display = 'block';
-}
-
-function editSlot(slotId, time, price, enabled) {
-    editingSlotId = slotId;
-    document.getElementById('modal-title').textContent = 'Edit Slot';
-    document.getElementById('slot-id').value = slotId;
-    document.getElementById('slot-time').value = time;
-    document.getElementById('slot-price').value = price;
-    document.getElementById('slot-enabled').checked = enabled;
-    document.getElementById('slotModal').style.display = 'block';
-}
-
-function closeSlotModal() {
-    document.getElementById('slotModal').style.display = 'none';
-}
-
-document.getElementById('slotForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const data = {
-        time: document.getElementById('slot-time').value,
-        price: document.getElementById('slot-price').value,
-        enabled: document.getElementById('slot-enabled').checked
-    };
-    
-    const url = editingSlotId 
-        ? `/admin/slot/${editingSlotId}/update`
-        : '/admin/slot/create';
-    
-    fetch(url, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('Error saving slot');
-        }
-    })
-    .catch(err => {
-        alert('Error saving slot');
-    });
-});
-
-window.onclick = function(event) {
-    const modal = document.getElementById('slotModal');
-    if (event.target == modal) {
-        closeSlotModal();
+    function showCreateSlotModal() {
+        editingSlotId = null;
+        document.getElementById('modal-title').textContent = 'Add New Slot';
+        document.getElementById('slot-id').value = '';
+        document.getElementById('slot-sport').value = 'football';
+        document.getElementById('slot-time').value = '';
+        document.getElementById('slot-price').value = '';
+        document.getElementById('slot-enabled').checked = true;
+        document.getElementById('slot-discount-active').checked = false;
+        document.getElementById('slot-discount-percent').value = '';
+        document.getElementById('slotModal').style.display = 'block';
     }
-}
+
+    function editSlot(slotId, time, price, enabled, discountActive, discountPercent, sport) {
+        editingSlotId = slotId;
+        document.getElementById('modal-title').textContent = 'Edit Slot';
+        document.getElementById('slot-id').value = slotId;
+        document.getElementById('slot-sport').value = sport || 'football';
+        document.getElementById('slot-time').value = time;
+        document.getElementById('slot-price').value = price;
+        document.getElementById('slot-enabled').checked = enabled;
+        document.getElementById('slot-discount-active').checked = discountActive;
+        document.getElementById('slot-discount-percent').value = discountPercent || '';
+        document.getElementById('slotModal').style.display = 'block';
+    }
+
+    function closeSlotModal() {
+        document.getElementById('slotModal').style.display = 'none';
+    }
+
+    document.getElementById('slotForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const data = {
+            sport: document.getElementById('slot-sport').value,
+            time: document.getElementById('slot-time').value,
+            price: document.getElementById('slot-price').value,
+            enabled: document.getElementById('slot-enabled').checked,
+            discount_active: document.getElementById('slot-discount-active').checked,
+            discount_percent: document.getElementById('slot-discount-percent').value || 0
+        };
+
+        const url = editingSlotId
+            ? `/admin/slot/${editingSlotId}/update`
+            : '/admin/slot/create';
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error saving slot');
+                }
+            })
+            .catch(err => {
+                alert('Error saving slot');
+            });
+    });
+
+    window.onclick = function (event) {
+        const modal = document.getElementById('slotModal');
+        if (event.target == modal) {
+            closeSlotModal();
+        }
+    }
 </script>
 {% endblock %}
-
-
-
-
-
-
