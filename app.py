@@ -39,6 +39,13 @@ def create_app(config_name='development'):
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(auth_bp)
     
+    # Global context processor
+    @app.context_processor
+    def inject_settings():
+        from models.settings import Settings
+        settings = Settings.find_one()
+        return dict(settings=settings)
+    
     # Initialize database
     from models.booking import Booking
     from models.slot import Slot
