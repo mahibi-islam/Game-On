@@ -2,86 +2,239 @@
 
 {% block title %}Pricing - {{ settings.turf_name if settings else 'GAME ON BOGURA' }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .rate-container {
+        display: none;
+        animation: fadeIn 0.4s ease;
+    }
+
+    .rate-container.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .clickable-rate {
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .clickable-rate:hover {
+        transform: translateY(-8px) scale(1.02);
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 15px 30px rgba(0, 255, 136, 0.2) !important;
+    }
+
+    .clickable-rate::after {
+        content: 'Check Rates';
+        position: absolute;
+        bottom: -20px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.7rem;
+        color: var(--primary-color);
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .clickable-rate:hover::after {
+        bottom: 10px;
+        opacity: 1;
+    }
+
+    .clickable-rate.active {
+        background: rgba(0, 255, 136, 0.1) !important;
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 0 25px rgba(0, 255, 136, 0.3) !important;
+    }
+
+    .clickable-rate.active::after {
+        content: 'Currently Viewing';
+        bottom: 10px;
+        opacity: 0.6;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <h1 class="page-title">Pricing</h1>
 
     <div class="pricing-info">
-        <div class="info-card">
+        <div class="info-card clickable-rate active" id="rate-weekday" onclick="toggleRates('weekday')">
             <h3><i class="fas fa-calendar-day"></i> Weekday Rates</h3>
             <p>Monday - Friday</p>
         </div>
-        <div class="info-card">
+        <div class="info-card clickable-rate" id="rate-weekend" onclick="toggleRates('weekend')">
             <h3><i class="fas fa-calendar-weekend"></i> Weekend Rates</h3>
             <p>Saturday - Sunday</p>
         </div>
     </div>
 
-    <div class="pricing-section">
+    <div class="pricing-section" id="pricing-tables">
         <h2 class="section-title"><i class="fas fa-futbol"></i> Football Turf Pricing</h2>
-        <div class="pricing-table-container">
-            <table class="pricing-table">
-                <thead>
-                    <tr>
-                        <th>Time Slot</th>
-                        <th>Price (BDT)</th>
-                        <th>Duration</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for slot in football_slots %}
-                    <tr>
-                        <td>{{ slot.time }}</td>
-                        <td class="price-cell">
-                            {% if slot.discount_active %}
-                            <span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳{{ slot.price
-                                }}</span>
-                            <span>৳{{ slot.price * (1 - slot.discount_percent / 100) }}</span>
-                            <div style="font-size: 0.7em; color: var(--primary-color);">({{ slot.discount_percent }}%
-                                OFF)</div>
-                            {% else %}
-                            ৳{{ slot.price }}
-                            {% endif %}
-                        </td>
-                        <td>90 Minutes</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+        <div id="football-weekday" class="rate-container active">
+            <div class="pricing-table-container">
+                <table class="pricing-table">
+                    <thead>
+                        <tr>
+                            <th>Time Slot</th>
+                            <th>Price (BDT)</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for slot in football_slots if (not slot.rate_type or slot.rate_type == 'weekday') %}
+                        <tr>
+                            <td>{{ slot.time }}</td>
+                            <td class="price-cell">
+                                {% if slot.discount_active %}
+                                <span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳{{
+                                    slot.price }}</span>
+                                <span>৳{{ slot.price * (1 - slot.discount_percent / 100) }}</span>
+                                <div style="font-size: 0.7em; color: var(--primary-color);">({{ slot.discount_percent
+                                    }}% OFF)</div>
+                                {% else %}
+                                ৳{{ slot.price }}
+                                {% endif %}
+                            </td>
+                            <td>90 Minutes</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="football-weekend" class="rate-container">
+            <div class="pricing-table-container">
+                <table class="pricing-table">
+                    <thead>
+                        <tr>
+                            <th>Time Slot</th>
+                            <th>Price (BDT)</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if football_slots|selectattr("rate_type", "equalto", "weekend")|list|length > 0 %}
+                        {% for slot in football_slots if slot.rate_type == 'weekend' %}
+                        <tr>
+                            <td>{{ slot.time }}</td>
+                            <td class="price-cell">
+                                {% if slot.discount_active %}
+                                <span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳{{
+                                    slot.price }}</span>
+                                <span>৳{{ slot.price * (1 - slot.discount_percent / 100) }}</span>
+                                <div style="font-size: 0.7em; color: var(--primary-color);">({{ slot.discount_percent
+                                    }}% OFF)</div>
+                                {% else %}
+                                ৳{{ slot.price }}
+                                {% endif %}
+                            </td>
+                            <td>90 Minutes</td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No
+                                weekend rates defined yet.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <div class="pricing-section spacer">
         <h2 class="section-title"><i class="fas fa-table-tennis"></i> Badminton Court Pricing</h2>
-        <div class="pricing-table-container">
-            <table class="pricing-table">
-                <thead>
-                    <tr>
-                        <th>Time Slot</th>
-                        <th>Price (BDT)</th>
-                        <th>Duration</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for slot in badminton_slots %}
-                    <tr>
-                        <td>{{ slot.time }}</td>
-                        <td class="price-cell">
-                            {% if slot.discount_active %}
-                            <span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳{{ slot.price
-                                }}</span>
-                            <span>৳{{ slot.price * (1 - slot.discount_percent / 100) }}</span>
-                            <div style="font-size: 0.7em; color: var(--primary-color);">({{ slot.discount_percent }}%
-                                OFF)</div>
-                            {% else %}
-                            ৳{{ slot.price }}
-                            {% endif %}
-                        </td>
-                        <td>60 Minutes</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+        <div id="badminton-weekday" class="rate-container active">
+            <div class="pricing-table-container">
+                <table class="pricing-table">
+                    <thead>
+                        <tr>
+                            <th>Time Slot</th>
+                            <th>Price (BDT)</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for slot in badminton_slots if (not slot.rate_type or slot.rate_type == 'weekday') %}
+                        <tr>
+                            <td>{{ slot.time }}</td>
+                            <td class="price-cell">
+                                {% if slot.discount_active %}
+                                <span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳{{
+                                    slot.price }}</span>
+                                <span>৳{{ slot.price * (1 - slot.discount_percent / 100) }}</span>
+                                <div style="font-size: 0.7em; color: var(--primary-color);">({{ slot.discount_percent
+                                    }}% OFF)</div>
+                                {% else %}
+                                ৳{{ slot.price }}
+                                {% endif %}
+                            </td>
+                            <td>60 Minutes</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="badminton-weekend" class="rate-container">
+            <div class="pricing-table-container">
+                <table class="pricing-table">
+                    <thead>
+                        <tr>
+                            <th>Time Slot</th>
+                            <th>Price (BDT)</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if badminton_slots|selectattr("rate_type", "equalto", "weekend")|list|length > 0 %}
+                        {% for slot in badminton_slots if slot.rate_type == 'weekend' %}
+                        <tr>
+                            <td>{{ slot.time }}</td>
+                            <td class="price-cell">
+                                {% if slot.discount_active %}
+                                <span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳{{
+                                    slot.price }}</span>
+                                <span>৳{{ slot.price * (1 - slot.discount_percent / 100) }}</span>
+                                <div style="font-size: 0.7em; color: var(--primary-color);">({{ slot.discount_percent
+                                    }}% OFF)</div>
+                                {% else %}
+                                ৳{{ slot.price }}
+                                {% endif %}
+                            </td>
+                            <td>60 Minutes</td>
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No
+                                weekend rates defined yet.</td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -101,4 +254,28 @@
         </a>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleRates(type) {
+        // Toggle active state for cards
+        document.getElementById('rate-weekday').classList.remove('active');
+        document.getElementById('rate-weekend').classList.remove('active');
+        document.getElementById('rate-' + type).classList.add('active');
+
+        // Toggle visibility for table containers
+        document.querySelectorAll('.rate-container').forEach(container => {
+            container.classList.remove('active');
+        });
+        document.getElementById('football-' + type).classList.add('active');
+        document.getElementById('badminton-' + type).classList.add('active');
+
+        // Smooth scroll to the tables section
+        document.getElementById('pricing-tables').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+</script>
 {% endblock %}

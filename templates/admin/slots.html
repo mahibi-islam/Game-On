@@ -18,6 +18,7 @@
                     <tr>
                         <th>Time Slot</th>
                         <th>Price (BDT)</th>
+                        <th>Rate Type</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -44,7 +45,7 @@
                         </td>
                         <td>
                             <button
-                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'football')"
+                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'football', '{{ slot.rate_type|default('weekday') }}')"
                                 class="btn btn-sm btn-primary">Edit</button>
                         </td>
                     </tr>
@@ -62,6 +63,7 @@
                     <tr>
                         <th>Time Slot</th>
                         <th>Price (BDT)</th>
+                        <th>Rate Type</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -88,7 +90,7 @@
                         </td>
                         <td>
                             <button
-                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'badminton')"
+                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'badminton', '{{ slot.rate_type|default('weekday') }}')"
                                 class="btn btn-sm btn-primary">Edit</button>
                         </td>
                     </tr>
@@ -111,6 +113,13 @@
                 <select id="slot-sport" class="form-control" required>
                     <option value="football">Football</option>
                     <option value="badminton">Badminton</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="slot-rate-type">Rate Type *</label>
+                <select id="slot-rate-type" class="form-control" required>
+                    <option value="weekday">Weekday</option>
+                    <option value="weekend">Weekend</option>
                 </select>
             </div>
             <div class="form-group">
@@ -157,6 +166,7 @@
         document.getElementById('modal-title').textContent = 'Add New Slot';
         document.getElementById('slot-id').value = '';
         document.getElementById('slot-sport').value = 'football';
+        document.getElementById('slot-rate-type').value = 'weekday';
         document.getElementById('slot-time').value = '';
         document.getElementById('slot-price').value = '';
         document.getElementById('slot-enabled').checked = true;
@@ -165,11 +175,12 @@
         document.getElementById('slotModal').style.display = 'block';
     }
 
-    function editSlot(slotId, time, price, enabled, discountActive, discountPercent, sport) {
+    function editSlot(slotId, time, price, enabled, discountActive, discountPercent, sport, rateType) {
         editingSlotId = slotId;
         document.getElementById('modal-title').textContent = 'Edit Slot';
         document.getElementById('slot-id').value = slotId;
         document.getElementById('slot-sport').value = sport || 'football';
+        document.getElementById('slot-rate-type').value = rateType || 'weekday';
         document.getElementById('slot-time').value = time;
         document.getElementById('slot-price').value = price;
         document.getElementById('slot-enabled').checked = enabled;
@@ -187,6 +198,7 @@
 
         const data = {
             sport: document.getElementById('slot-sport').value,
+            rate_type: document.getElementById('slot-rate-type').value,
             time: document.getElementById('slot-time').value,
             price: document.getElementById('slot-price').value,
             enabled: document.getElementById('slot-enabled').checked,
