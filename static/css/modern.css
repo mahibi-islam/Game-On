@@ -322,6 +322,13 @@ h4,
     box-shadow: 0 0 15px rgba(0, 255, 135, 0.1);
 }
 
+/* Fix for unreadable dropdown options in dark mode */
+.form-control option,
+select option {
+    background-color: var(--bg-light);
+    color: var(--text-primary);
+}
+
 input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(1);
     cursor: pointer;
@@ -546,6 +553,34 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .availability-summary p {
     margin-bottom: 1rem;
+}
+
+/* Fix for Booking Confirmation Screen */
+.confirmation-info {
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary) !important;
+    padding: 2rem !important;
+    border-radius: 12px !important;
+    margin: 2rem auto !important;
+    max-width: 600px !important;
+}
+
+.confirmation-info strong {
+    color: var(--primary-color) !important;
+    margin-right: 0.5rem;
+}
+
+.confirmation-info p {
+    margin-bottom: 0.8rem !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 0.5rem;
+    font-size: 1.05rem;
+}
+
+.confirmation-info p:last-child {
+    border-bottom: none;
 }
 
 .availability-result {

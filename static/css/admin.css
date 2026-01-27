@@ -241,6 +241,24 @@
     gap: 2rem;
 }
 
+.dashboard-charts {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.chart-container canvas {
+    max-height: 300px;
+    width: 100% !important;
+}
+
+@media (max-width: 1024px) {
+    .dashboard-charts {
+        grid-template-columns: 1fr;
+    }
+}
+
 .dashboard-section {
     background: white;
     padding: 2rem;
@@ -266,6 +284,22 @@
     padding: 1rem;
     background: #f8f9fa;
     border-radius: 5px;
+}
+
+.slot-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.slot-time {
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.slot-sport {
+    font-size: 0.85rem;
+    color: #666;
 }
 
 .badge {

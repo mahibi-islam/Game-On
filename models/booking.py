@@ -23,9 +23,24 @@ class Booking:
         return mongo.db.bookings
     
     @staticmethod
+    def get_next_sequence():
+        """Get the next sequential ID for bookings"""
+        result = mongo.db.counters.find_one_and_update(
+            {'_id': 'booking_id'},
+            {'$inc': {'sequence_value': 1}},
+            upsert=True,
+            return_document=True
+        )
+        return result['sequence_value']
+
+    @staticmethod
     def create(data):
         """Create a new booking"""
+        next_seq = Booking.get_next_sequence()
+        booking_id_str = f"GAMEON#{next_seq}" 
+        
         booking_data = {
+            'booking_id': booking_id_str,
             'date': data.get('date'),
             'time_slot': data.get('time_slot'),
             'name': data.get('name'),
@@ -142,7 +157,7 @@ class Booking:
             creds = Credentials.from_service_account_file(creds_file, scopes=scopes)
             client = gspread.authorize(creds)
             
-            # Open by URL
+           
             print(f"Google Sheets: Opening spreadsheet from URL: {sheets_url}")
             spreadsheet = client.open_by_url(sheets_url)
             worksheet = spreadsheet.sheet1
@@ -183,7 +198,7 @@ class Booking:
     @staticmethod
     def init_excel():
         """Initialize Excel file if it doesn't exist"""
-        # Initialize local Excel as fallback
+    
         excel_file = Booking.get_excel_file_path()
         if not os.path.exists(excel_file):
             wb = Workbook()
@@ -206,13 +221,43 @@ class Booking:
             
             wb.save(excel_file)
         
-        # Initialize Google Sheets if configured
+ 
         Booking.init_google_sheet()
     
     @staticmethod
     def write_to_excel(booking_data):
         """Write booking to Excel and Google Sheets"""
-        # Write to local Excel FIRST - this must always succeed
+        
+        from models.slot import Slot
+        slot_id = booking_data.get('time_slot')
+        slot = None
+        if slot_id:
+            try:
+                if isinstance(slot_id, str) and len(slot_id) == 24:
+                    slot = Slot.find_by_id(slot_id)
+                elif isinstance(slot_id, ObjectId):
+                    slot = Slot.find_by_id(str(slot_id))
+            except Exception as e:
+                print(f"Debug: Slot fetch error: {e}")
+                slot = None
+        
+        slot_time = slot.get('time', 'N/A') if slot else 'N/A'
+        
+     
+        display_id = booking_data.get('booking_id')
+        if not display_id:
+            # Fallback for old ones
+            display_id = str(booking_data.get('_id', ''))
+            if len(display_id) > 10: # It's a hash
+                display_id = f"LEGACY_{display_id[-6:]}"
+        
+      
+        if display_id and not display_id.startswith('#'):
+            display_id = f"#{display_id}"
+
+        print(f"Debug: Exporting Booking - ID: {display_id}, Time: {slot_time}")
+
+      
         try:
             excel_file = Booking.get_excel_file_path()
             if not os.path.exists(excel_file):
@@ -223,9 +268,9 @@ class Booking:
             ws = wb.active
             
             row = [
-                str(booking_data.get('_id', '')),
+                display_id,
                 booking_data.get('date', ''),
-                booking_data.get('time_slot', ''),
+                slot_time,
                 booking_data.get('name', ''),
                 booking_data.get('phone', ''),
                 booking_data.get('team_name', ''),
@@ -244,7 +289,7 @@ class Booking:
             import traceback
             traceback.print_exc()
         
-        # Sync to Google Sheets if configured (optional, won't fail if this errors)
+        # Sync to Google Sheets if configured
         try:
             print("\n=== Attempting Google Sheets Sync ===")
             worksheet = Booking.get_google_sheet()
@@ -259,11 +304,26 @@ class Booking:
             print(f"Google Sheets Sync ERROR: {e}")
             import traceback
             traceback.print_exc()
-    
+
     @staticmethod
     def update_in_excel(booking_id, updated_data):
         """Update booking in Excel and Google Sheets"""
-        # Update local Excel FIRST
+   
+        from models.slot import Slot
+        slot_id = updated_data.get('time_slot')
+        slot = None
+        if slot_id:
+            try:
+                if isinstance(slot_id, str) and len(slot_id) == 24:
+                    slot = Slot.find_by_id(slot_id)
+                elif isinstance(slot_id, ObjectId):
+                    slot = Slot.find_by_id(str(slot_id))
+            except Exception as e:
+                print(f"Debug: Slot fetch error during update: {e}")
+                slot = None
+        slot_time = slot.get('time', '') if slot else ''
+
+        
         try:
             excel_file = Booking.get_excel_file_path()
             if not os.path.exists(excel_file):
@@ -274,10 +334,17 @@ class Booking:
             ws = wb.active
             
             found = False
+            id_to_find = str(booking_id)
+            alt_id = updated_data.get('booking_id', '')
+            if alt_id and not alt_id.startswith('$'):
+                alt_id = f"#{alt_id}"
+            
             for row in ws.iter_rows(min_row=2, values_only=False):
-                if row[0].value == str(booking_id):
+               
+                if row[0].value == id_to_find or row[0].value == alt_id or (isinstance(row[0].value, str) and row[0].value.replace('#','') == alt_id.replace('#','')):
                     row[1].value = updated_data.get('date', row[1].value)
-                    row[2].value = updated_data.get('time_slot', row[2].value)
+                    if slot_time:
+                        row[2].value = slot_time
                     row[3].value = updated_data.get('name', row[3].value)
                     row[4].value = updated_data.get('phone', row[4].value)
                     row[5].value = updated_data.get('team_name', row[5].value)
@@ -298,25 +365,25 @@ class Booking:
             print(f"ERROR updating local Excel file: {e}")
             import traceback
             traceback.print_exc()
-        
-        # Sync to Google Sheets if configured
+       
         try:
             worksheet = Booking.get_google_sheet()
             if worksheet:
-                # Find the row by booking ID
-                cell = worksheet.find(str(booking_id))
+          
+                search_query = alt_id if alt_id else id_to_find
+                cell = worksheet.find(search_query)
                 if cell:
                     row_num = cell.row
-                    worksheet.update_cell(row_num, 2, updated_data.get('date', ''))
-                    worksheet.update_cell(row_num, 3, updated_data.get('time_slot', ''))
-                    worksheet.update_cell(row_num, 4, updated_data.get('name', ''))
-                    worksheet.update_cell(row_num, 5, updated_data.get('phone', ''))
-                    worksheet.update_cell(row_num, 6, updated_data.get('team_name', ''))
-                    worksheet.update_cell(row_num, 7, updated_data.get('payment_method', ''))
-                    worksheet.update_cell(row_num, 8, updated_data.get('amount', ''))
-                    worksheet.update_cell(row_num, 9, updated_data.get('status', ''))
-                    worksheet.update_cell(row_num, 10, updated_data.get('transaction_id', ''))
-                    worksheet.update_cell(row_num, 11, updated_data.get('notes', ''))
+                    if updated_data.get('date'): worksheet.update_cell(row_num, 2, updated_data.get('date'))
+                    if slot_time: worksheet.update_cell(row_num, 3, slot_time)
+                    if updated_data.get('name'): worksheet.update_cell(row_num, 4, updated_data.get('name'))
+                    if updated_data.get('phone'): worksheet.update_cell(row_num, 5, updated_data.get('phone'))
+                    if updated_data.get('team_name'): worksheet.update_cell(row_num, 6, updated_data.get('team_name'))
+                    if updated_data.get('payment_method'): worksheet.update_cell(row_num, 7, updated_data.get('payment_method'))
+                    if updated_data.get('amount'): worksheet.update_cell(row_num, 8, updated_data.get('amount'))
+                    if updated_data.get('status'): worksheet.update_cell(row_num, 9, updated_data.get('status'))
+                    if updated_data.get('transaction_id'): worksheet.update_cell(row_num, 10, updated_data.get('transaction_id'))
+                    if updated_data.get('notes'): worksheet.update_cell(row_num, 11, updated_data.get('notes'))
         except Exception as e:
             print(f"Error updating Google Sheets: {e}")
     
@@ -335,15 +402,15 @@ class Booking:
             
             whatsapp_number = settings['whatsapp'].replace('+', '').replace(' ', '').replace('-', '')
             
-            message = f"""🎉 *Booking Confirmed!*
+            message = f""" *Booking Confirmed!*
 
-📅 *Date:* {booking_data.get('date', 'N/A')}
-⏰ *Time Slot:* {slot_time}
-👤 *Name:* {booking_data.get('name', 'N/A')}
-📞 *Phone:* {booking_data.get('phone', 'N/A')}
-💰 *Amount:* ৳{booking_data.get('amount', 'N/A')}
-💳 *Payment:* {booking_data.get('payment_method', 'N/A')}
-🆔 *Booking ID:* {booking_data.get('_id', 'N/A')}
+ *Date:* {booking_data.get('date', 'N/A')}
+ *Time Slot:* {slot_time}
+ *Name:* {booking_data.get('name', 'N/A')}
+ *Phone:* {booking_data.get('phone', 'N/A')}
+ *Amount:* ৳{booking_data.get('amount', 'N/A')}
+ *Payment:* {booking_data.get('payment_method', 'N/A')}
+ *Booking ID:* #{booking_data.get('booking_id', booking_data.get('_id', 'N/A'))}
 
 Thank you for your booking!"""
             

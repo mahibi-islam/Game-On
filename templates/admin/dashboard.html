@@ -11,7 +11,7 @@
             <p>Today's Bookings</p>
         </div>
     </div>
-    
+
     <div class="stat-card">
         <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
         <div class="stat-content">
@@ -19,13 +19,25 @@
             <p>Upcoming Bookings</p>
         </div>
     </div>
-    
+
     <div class="stat-card">
         <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
         <div class="stat-content">
             <h3>৳{{ total_earnings }}</h3>
             <p>Total Earnings</p>
         </div>
+    </div>
+</div>
+
+<div class="dashboard-charts">
+    <div class="dashboard-section chart-container">
+        <h2>Slot Performance</h2>
+        <canvas id="slotPerformanceChart"></canvas>
+    </div>
+
+    <div class="dashboard-section chart-container">
+        <h2>Booking Distribution</h2>
+        <canvas id="bookingDistributionChart"></canvas>
     </div>
 </div>
 
@@ -48,7 +60,8 @@
                 <tbody>
                     {% for booking in recent_bookings %}
                     <tr>
-                        <td>{{ booking._id }}</td>
+                        <td>{% if booking.booking_id %}{{ booking.booking_id }}{% else %}#{{ booking._id }}{% endif %}
+                        </td>
                         <td>{{ booking.date }}</td>
                         <td>{{ booking.get('slot_time', 'N/A') }}</td>
                         <td>{{ booking.name }}</td>
@@ -61,13 +74,16 @@
             </table>
         </div>
     </div>
-    
+
     <div class="dashboard-section">
         <h2>Popular Time Slots</h2>
         <div class="popular-slots">
             {% for slot_data in popular_slots %}
             <div class="popular-slot-item">
-                <span>Slot ID: {{ slot_data._id }}</span>
+                <div class="slot-info">
+                    <span class="slot-time">{{ slot_data.time }}</span>
+                    <span class="slot-sport">{{ slot_data.sport }}</span>
+                </div>
                 <span class="badge">{{ slot_data.count }} bookings</span>
             </div>
             {% endfor %}
@@ -76,8 +92,65 @@
 </div>
 {% endblock %}
 
+{% block extra_js %}
+<script>
+    // Slot Performance Chart (Bar Chart)
+    const ctxPerformance = document.getElementById('slotPerformanceChart').getContext('2d');
+    new Chart(ctxPerformance, {
+        type: 'bar',
+        data: {
+            labels: {{ performance_labels | tojson }},
+        datasets: [{
+            label: 'Number of Bookings',
+            data: {{ performance_values | tojson }},
+        backgroundColor: '#2ecc71',
+        borderColor: '#2ecc71',
+        borderWidth: 1
+            }]
+        },
+        options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+    });
 
-
-
-
-
+    // Booking Distribution Chart (Pie Chart)
+    const ctxDistribution = document.getElementById('bookingDistributionChart').getContext('2d');
+    new Chart(ctxDistribution, {
+        type: 'pie',
+        data: {
+            labels: {{ distribution_labels | tojson }},
+        datasets: [{
+            data: {{ distribution_values | tojson }},
+        backgroundColor: [
+            '#3498db', // Morning - Blue
+            '#2ecc71', // Afternoon - Green
+            '#f1c40f', // Evening - Yellow
+            '#e74c3c'  // Night - Red
+        ],
+        borderWidth: 1
+            }]
+        },
+        options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'right'
+            }
+        }
+    }
+    });
+</script>
+{% endblock %}

@@ -310,7 +310,7 @@
         goToStep(5);
         document.getElementById('confirmation-details').innerHTML = `
         <div class="confirmation-info">
-            <p><strong>Booking ID:</strong> ${booking._id}</p>
+            <p><strong>Booking ID:</strong> ${booking.booking_id ? booking.booking_id : '#' + booking._id}</p>
             <p><strong>Date:</strong> ${booking.date}</p>
             <p><strong>Time Slot:</strong> ${selectedSlot}</p>
             <p><strong>Name:</strong> ${booking.name}</p>

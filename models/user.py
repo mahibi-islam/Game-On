@@ -33,7 +33,7 @@ def get_next_nomad_id():
         return_document=ReturnDocument.AFTER 
     )
   
-    return f"User#{counter['sequence_value']}"
+    return f"ONGAME#{counter['sequence_value']}"
 
 
 def create_user(data):

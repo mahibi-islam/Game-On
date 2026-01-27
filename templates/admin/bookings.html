@@ -7,12 +7,16 @@
     <a href="{{ url_for('admin.create_manual_booking') }}" class="btn btn-primary">
         <i class="fas fa-plus"></i> Create Manual Booking
     </a>
-    
+
     <div class="filter-tabs">
-        <a href="{{ url_for('admin.bookings', filter='all') }}" class="filter-tab {{ 'active' if filter_type == 'all' else '' }}">All</a>
-        <a href="{{ url_for('admin.bookings', filter='today') }}" class="filter-tab {{ 'active' if filter_type == 'today' else '' }}">Today</a>
-        <a href="{{ url_for('admin.bookings', filter='pending') }}" class="filter-tab {{ 'active' if filter_type == 'pending' else '' }}">Pending</a>
-        <a href="{{ url_for('admin.bookings', filter='approved') }}" class="filter-tab {{ 'active' if filter_type == 'approved' else '' }}">Approved</a>
+        <a href="{{ url_for('admin.bookings', filter='all') }}"
+            class="filter-tab {{ 'active' if filter_type == 'all' else '' }}">All</a>
+        <a href="{{ url_for('admin.bookings', filter='today') }}"
+            class="filter-tab {{ 'active' if filter_type == 'today' else '' }}">Today</a>
+        <a href="{{ url_for('admin.bookings', filter='pending') }}"
+            class="filter-tab {{ 'active' if filter_type == 'pending' else '' }}">Pending</a>
+        <a href="{{ url_for('admin.bookings', filter='approved') }}"
+            class="filter-tab {{ 'active' if filter_type == 'approved' else '' }}">Approved</a>
     </div>
 </div>
 
@@ -35,7 +39,7 @@
         <tbody>
             {% for booking in bookings %}
             <tr>
-                <td>{{ booking._id }}</td>
+                <td>{% if booking.booking_id %}{{ booking.booking_id }}{% else %}#{{ booking._id }}{% endif %}</td>
                 <td>{{ booking.date }}</td>
                 <td>{{ booking.get('slot_time', 'N/A') }}</td>
                 <td>{{ booking.name }}</td>
@@ -43,22 +47,28 @@
                 <td>{{ booking.get('team_name', '-') }}</td>
                 <td>৳{{ booking.amount }}</td>
                 <td>{{ booking.payment_method }}</td>
-                <td><span class="status-badge {{ booking.status_display }}">{{ booking.status_display|title }}</span></td>
+                <td><span class="status-badge {{ booking.status_display }}">{{ booking.status_display|title }}</span>
+                </td>
                 <td>
                     <div class="action-buttons">
                         <a href="tel:{{ booking.phone }}" class="btn btn-sm btn-secondary">Call</a>
-                        <a href="https://wa.me/{{ booking.phone|replace('+','')|replace(' ','') }}" target="_blank" class="btn btn-sm btn-secondary">WhatsApp</a>
+                        <a href="https://wa.me/{{ booking.phone|replace('+','')|replace(' ','') }}" target="_blank"
+                            class="btn btn-sm btn-secondary">WhatsApp</a>
                         {% if booking.status == 'pending' %}
-                        <button onclick="updateBooking('{{ booking._id }}', 'approve')" class="btn btn-sm btn-success">Approve</button>
+                        <button onclick="updateBooking('{{ booking._id }}', 'approve')"
+                            class="btn btn-sm btn-success">Approve</button>
                         {% endif %}
                         {% if booking.status != 'paid' %}
-                        <button onclick="updateBooking('{{ booking._id }}', 'paid')" class="btn btn-sm btn-primary">Mark Paid</button>
+                        <button onclick="updateBooking('{{ booking._id }}', 'paid')" class="btn btn-sm btn-primary">Mark
+                            Paid</button>
                         {% endif %}
                         {% if booking.status != 'cancelled' %}
-                        <button onclick="updateBooking('{{ booking._id }}', 'cancel')" class="btn btn-sm btn-danger">Cancel</button>
+                        <button onclick="updateBooking('{{ booking._id }}', 'cancel')"
+                            class="btn btn-sm btn-danger">Cancel</button>
                         {% endif %}
                         {% if booking.status != 'pending' %}
-                        <button onclick="updateBooking('{{ booking._id }}', 'pending')" class="btn btn-sm btn-warning">Set Pending</button>
+                        <button onclick="updateBooking('{{ booking._id }}', 'pending')"
+                            class="btn btn-sm btn-warning">Set Pending</button>
                         {% endif %}
                     </div>
                 </td>
@@ -71,27 +81,26 @@
 
 {% block extra_js %}
 <script>
-function updateBooking(bookingId, action) {
-    if (!confirm(`Are you sure you want to ${action} this booking?`)) {
-        return;
-    }
-    
-    fetch(`/admin/booking/${bookingId}/${action}`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'}
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('Error updating booking');
+    function updateBooking(bookingId, action) {
+        if (!confirm(`Are you sure you want to ${action} this booking?`)) {
+            return;
         }
-    })
-    .catch(err => {
-        alert('Error updating booking');
-    });
-}
+
+        fetch(`/admin/booking/${bookingId}/${action}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error updating booking');
+                }
+            })
+            .catch(err => {
+                alert('Error updating booking');
+            });
+    }
 </script>
 {% endblock %}
-

@@ -80,7 +80,17 @@ def dashboard():
         {'$sort': {'count': -1}},
         {'$limit': 5}
     ]
-    popular_slots = Booking.aggregate(pipeline)
+    popular_slots = list(Booking.aggregate(pipeline))
+    
+    # Enrich popular slots with slot details
+    for slot_data in popular_slots:
+        slot = Slot.find_by_id(slot_data['_id'])
+        if slot:
+            slot_data['time'] = slot.get('time', 'N/A')
+            slot_data['sport'] = slot.get('sport', 'N/A').title()
+        else:
+            slot_data['time'] = 'N/A'
+            slot_data['sport'] = 'N/A'
     
     recent_bookings = Booking.find_all(sort=[('created_at', -1)], limit=10)
     
@@ -89,12 +99,56 @@ def dashboard():
         slot = Slot.find_by_id(booking['time_slot'])
         booking['slot_time'] = slot['time'] if slot else 'N/A'
     
+    # Data for Slot Performance (Bar Chart)
+    # We already have popular_slots, let's use all slots that have bookings
+    all_slot_counts = list(Booking.aggregate([
+        {'$match': {'status': {'$in': ['pending', 'approved', 'paid']}}},
+        {'$group': {'_id': '$time_slot', 'count': {'$sum': 1}}}
+    ]))
+    
+    performance_labels = []
+    performance_values = []
+    
+    # Categorization for Booking Distribution (Pie Chart)
+    distribution = {
+        'Morning': 0,    # 06:00 - 12:00
+        'Afternoon': 0,  # 12:00 - 18:00
+        'Evening': 0,    # 18:00 - 21:00
+        'Night': 0       # 21:00 - 06:00
+    }
+    
+    for item in all_slot_counts:
+        slot = Slot.find_by_id(item['_id'])
+        if slot:
+            time_str = slot.get('time', 'N/A')
+            sport_name = slot.get('sport', 'football').title()
+            performance_labels.append(f"{time_str} ({sport_name})")
+            performance_values.append(item['count'])
+            
+            # Categorize based on start hour
+            try:
+                start_hour = int(time_str.split(':')[0])
+                if 6 <= start_hour < 12:
+                    distribution['Morning'] += item['count']
+                elif 12 <= start_hour < 18:
+                    distribution['Afternoon'] += item['count']
+                elif 18 <= start_hour < 21:
+                    distribution['Evening'] += item['count']
+                else:
+                    distribution['Night'] += item['count']
+            except (ValueError, IndexError):
+                pass
+
     return render_template('admin/dashboard.html',
                          today_bookings=today_bookings,
                          upcoming_bookings=upcoming_bookings,
                          total_earnings=total_earnings,
                          popular_slots=popular_slots,
-                         recent_bookings=recent_bookings)
+                         recent_bookings=recent_bookings,
+                         performance_labels=performance_labels,
+                         performance_values=performance_values,
+                         distribution_labels=list(distribution.keys()),
+                         distribution_values=list(distribution.values()))
 
 # ==================== Bookings Management ====================
 
@@ -119,6 +173,11 @@ def bookings():
     for booking in bookings_list:
         slot = Slot.find_by_id(booking['time_slot'])
         booking['slot_time'] = slot['time'] if slot else 'N/A'
+        
+        # Fallback for missing booking_id
+        if not booking.get('booking_id'):
+            booking['booking_id'] = f"LEGACY_{str(booking['_id'])[-6:]}"
+            
         # Compute played display if past slot start and not cancelled
         try:
             date_str = booking.get('date')

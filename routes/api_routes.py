@@ -95,7 +95,7 @@ def create_booking():
         
         return jsonify({
             'success': True,
-            'booking_id': booking['_id'],
+            'booking_id': booking.get('booking_id') or str(booking['_id']),
             'booking': booking
         })
     except Exception as e:

@@ -51,29 +51,37 @@
                 <thead>
                     <tr>
                         <th>Booking ID</th>
+
                         <th>Date</th>
+
                         <th>Time Slot</th>
+
                         <th>Status</th>
+
                         <th>Amount</th>
+
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for b in bookings %}
                     <tr>
-                        <td>#{{ loop.index }}</td>
+                        <td>{% if b.booking_id %}{{ b.booking_id }}{% else %}#{{ b._id }}{% endif %}</td>
                         <td>{{ b.date }}</td>
                         <td>{{ b.slot_time }}</td>
                         <td>{{ b.status_display|capitalize }}</td>
                         <td>৳{{ b.amount }}</td>
                         <td>
-                            {% if b.can_cancel %}
+                            {% if b.status == 'cancelled' %}
+                            <span class="btn btn-secondary" disabled>Cancelled</span>
+                            {% elif b.can_cancel %}
                             <form method="post" action="{{ url_for('user.cancel_booking', booking_id=b._id) }}"
                                 style="display:inline;">
                                 <button class="btn btn-danger" type="submit">Cancel</button>
                             </form>
                             {% else %}
-                            <button class="btn btn-secondary" type="button" disabled>Cannot cancel</button>
+                            <button class="btn btn-secondary" type="button" disabled
+                                title="Please call to cancel if less than 48h remains">Contact Authority</button>
                             {% endif %}
                         </td>
                     </tr>
