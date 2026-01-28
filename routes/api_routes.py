@@ -24,6 +24,7 @@ def get_availability(date):
     """Get availability for a specific date"""
     try:
         date_obj = datetime.strptime(date, '%Y-%m-%d')
+        sport = request.args.get('sport', 'football')
         # Friday is 4, Saturday is 5 in weekday() (Monday=0, Sunday=6)
         is_weekend = date_obj.weekday() in [4, 5]
         rate_type = 'weekend' if is_weekend else 'weekday'
