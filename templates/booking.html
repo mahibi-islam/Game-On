@@ -158,8 +158,8 @@
     let selectedAmount = 0;
     let bookingId = '';
 
-    // Set minimum date to tomorrow
-    document.getElementById('booking-date').min = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    // Set minimum date to today
+    document.getElementById('booking-date').min = new Date().toISOString().split('T')[0];
 
     document.getElementById('payment_method').addEventListener('change', function () {
         const transactionGroup = document.getElementById('transaction-id-group');

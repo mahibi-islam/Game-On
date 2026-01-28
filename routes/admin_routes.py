@@ -284,6 +284,7 @@ def update_slot(slot_id):
         'time': data.get('time'),
         'price': float(data.get('price')),
         'sport': data.get('sport', 'football'),
+        'rate_type': data.get('rate_type', 'weekday'),
         'enabled': data.get('enabled', True),
         'discount_active': data.get('discount_active', False),
         'discount_percent': float(data.get('discount_percent', 0.0))

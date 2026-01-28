@@ -23,8 +23,10 @@ def get_slots():
 def get_availability(date):
     """Get availability for a specific date"""
     try:
-        datetime.strptime(date, '%Y-%m-%d')  # Validate date format
-        sport = request.args.get('sport', 'football')
+        date_obj = datetime.strptime(date, '%Y-%m-%d')
+        # Friday is 4, Saturday is 5 in weekday() (Monday=0, Sunday=6)
+        is_weekend = date_obj.weekday() in [4, 5]
+        rate_type = 'weekend' if is_weekend else 'weekday'
         
         bookings = Booking.find_all({
             'date': date,
@@ -32,12 +34,27 @@ def get_availability(date):
         })
         booked_slots = [b['time_slot'] for b in bookings]
         
-        slots = Slot.find_all({'enabled': True, 'sport': sport}, sort=[('time', 1)])
+        slots = Slot.find_all({
+            'enabled': True, 
+            'sport': sport,
+            'rate_type': rate_type
+        }, sort=[('time', 1)])
         availability = []
+        now = datetime.now()
+        today_str = now.strftime('%Y-%m-%d')
+        current_time_str = now.strftime('%H:%M')
         
         for slot in slots:
             slot_id = str(slot['_id'])
             is_booked = slot_id in booked_slots
+            
+            # Check if slot is in the past (if date is today)
+            is_past = False
+            if date == today_str:
+                slot_start_time = slot['time'].split('-')[0]
+                if slot_start_time < current_time_str:
+                    is_past = True
+            
             availability.append({
                 '_id': slot_id,
                 'time': slot['time'],
@@ -45,7 +62,7 @@ def get_availability(date):
                 'sport': slot.get('sport', 'football'),
                 'discount_active': slot.get('discount_active', False),
                 'discount_percent': slot.get('discount_percent', 0),
-                'available': not is_booked
+                'available': not is_booked and not is_past
             })
         
         return jsonify(availability)

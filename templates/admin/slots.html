@@ -39,6 +39,11 @@
                             {% endif %}
                         </td>
                         <td>
+                            <span class="status-badge {{ 'weekend' if slot.rate_type == 'weekend' else 'weekday' }}">
+                                {{ slot.rate_type|default('weekday')|title }}
+                            </span>
+                        </td>
+                        <td>
                             <span class="status-badge {{ 'enabled' if slot.enabled else 'disabled' }}">
                                 {{ 'Enabled' if slot.enabled else 'Disabled' }}
                             </span>
@@ -82,6 +87,11 @@
                             {% else %}
                             ৳{{ slot.price }}
                             {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge {{ 'weekend' if slot.rate_type == 'weekend' else 'weekday' }}">
+                                {{ slot.rate_type|default('weekday')|title }}
+                            </span>
                         </td>
                         <td>
                             <span class="status-badge {{ 'enabled' if slot.enabled else 'disabled' }}">

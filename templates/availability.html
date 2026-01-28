@@ -58,8 +58,8 @@
 <script>
     let autoRefreshInterval = null;
 
-    // Set minimum date to tomorrow
-    document.getElementById('availability-date').min = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    // Set minimum date to today
+    document.getElementById('availability-date').min = new Date().toISOString().split('T')[0];
 
     // Check if date is in URL params
     const urlParams = new URLSearchParams(window.location.search);
