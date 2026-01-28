@@ -437,3 +437,28 @@ def export():
     excel_file = Booking.get_excel_file_path()
     return send_file(excel_file, as_attachment=True, download_name='bookings.xlsx')
 
+# ==================== Messages Management ====================
+
+@admin_bp.route('/messages')
+@admin_required
+def messages():
+    """View contact messages"""
+    from models.contact_message import ContactMessage
+    messages = ContactMessage.find_all()
+    # Format date for display
+    for msg in messages:
+        if 'created_at' in msg and isinstance(msg['created_at'], datetime):
+            msg['display_date'] = msg['created_at'].strftime('%Y-%m-%d %H:%M')
+        else:
+            msg['display_date'] = 'N/A'
+    return render_template('admin/messages.html', messages=messages)
+
+@admin_bp.route('/messages/delete/<message_id>', methods=['POST'])
+@admin_required
+def delete_message(message_id):
+    """Delete a contact message"""
+    from models.contact_message import ContactMessage
+    ContactMessage.delete(message_id)
+    flash('Message deleted successfully.', 'success')
+    return redirect(url_for('admin.messages'))
+
