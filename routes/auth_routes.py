@@ -1,9 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from werkzeug.security import check_password_hash
-from models.user import create_user, find_user_by_login, update_last_login
+from models.user import create_user, find_user_by_login, update_last_login, set_reset_token, verify_reset_token, update_password
 from models.admin import Admin
 from models.settings import Settings
 from db import mongo
+from utils.email_utils import send_reset_email
+import secrets
+from datetime import datetime, timedelta
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -104,3 +107,47 @@ def logout():
         session.pop(k, None)
     flash('Logged out successfully', 'success')
     return redirect(url_for('user.index'))
+
+
+@auth_bp.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    settings = Settings.find_one()
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        user = mongo.db.users.find_one({'email': email})
+        
+        if user:
+            token = secrets.token_urlsafe(32)
+            expiration = datetime.utcnow() + timedelta(hours=1)
+            set_reset_token(email, token, expiration)
+            send_reset_email(email, token)
+            
+        # Always flash success to avoid account enumeration
+        flash('If that email is registered, a reset link has been sent.', 'success')
+        return redirect(url_for('auth.login'))
+        
+    return render_template('auth/forgot_password.html', settings=settings)
+
+
+@auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    settings = Settings.find_one()
+    user = verify_reset_token(token)
+    
+    if not user:
+        flash('Invalid or expired reset link.', 'error')
+        return redirect(url_for('auth.forgot_password'))
+        
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if not password or password != confirm_password:
+            flash('Passwords do not match.', 'error')
+            return render_template('auth/reset_password.html', settings=settings, token=token)
+            
+        update_password(user['_id'], password)
+        flash('Password has been reset successfully.', 'success')
+        return redirect(url_for('auth.login'))
+        
+    return render_template('auth/reset_password.html', settings=settings, token=token)

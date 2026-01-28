@@ -11,15 +11,18 @@
         {% endif %}
         <div class="form-group">
             <label for="identifier">Email / User ID / Admin Username</label>
-            <input type="text" id="identifier" name="identifier" class="form-control" placeholder="you@example.com" required>
+            <input type="text" id="identifier" name="identifier" class="form-control" placeholder="you@example.com"
+                required>
         </div>
         <div class="form-group">
             <label for="password">Password</label>
             <input type="password" id="password" name="password" class="form-control" required>
         </div>
-        <div style="margin-top:1rem; display:flex; gap:.5rem;">
+        <div style="margin-top:1rem; display:flex; flex-wrap: wrap; gap:.5rem; align-items: center;">
             <button type="submit" class="btn btn-primary">Login</button>
             <a href="{{ url_for('auth.signup') }}" class="btn btn-secondary">Create Account</a>
+            <a href="{{ url_for('auth.forgot_password') }}"
+                style="font-size: 0.9rem; color: var(--primary-color);">Forgot Password?</a>
         </div>
     </form>
 </section>

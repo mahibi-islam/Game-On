@@ -107,6 +107,46 @@ def update_details(user_id, data):
     return result.modified_count > 0
 
 
+def set_reset_token(email, token, expiration):
+    """Saves a password reset token for a user."""
+    result = users_collection.update_one(
+        {"email": email},
+        {"$set": {
+            "reset_token": token,
+            "reset_expiration": expiration
+        }}
+    )
+    return result.modified_count > 0
+
+
+def verify_reset_token(token):
+    """Verifies a password reset token and returns the user if valid."""
+    user = users_collection.find_one({
+        "reset_token": token,
+        "reset_expiration": {"$gt": datetime.utcnow()}
+    })
+    return user
+
+
+def update_password(user_id, new_password):
+    """Updates a user's password and clears the reset token."""
+    hashed_password = generate_password_hash(new_password)
+    
+    if is_valid_objectid(user_id):
+        query = {"_id": ObjectId(user_id)}
+    else:
+        query = {"user_id": user_id}
+        
+    result = users_collection.update_one(
+        query,
+        {
+            "$set": {"password": hashed_password},
+            "$unset": {"reset_token": "", "reset_expiration": ""}
+        }
+    )
+    return result.modified_count > 0
+
+
 def submit_verification_photos(user_id, nid_photo, own_photo):
     
     upload_folder = "static/uploads"
