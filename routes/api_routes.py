@@ -25,6 +25,8 @@ def get_slots():
 def get_availability(date):
     """Get availability for a specific date"""
     try:
+        from utils.slot_utils import get_bangladesh_now, is_past_slot
+        
         date_obj = datetime.strptime(date, '%Y-%m-%d')
         sport = request.args.get('sport', 'football')
         # Friday is 4, Saturday is 5 in weekday() (Monday=0, Sunday=6)
@@ -35,7 +37,8 @@ def get_availability(date):
             'date': date,
             'status': {'$in': ['pending', 'approved', 'paid']}
         })
-        booked_slots = [b['time_slot'] for b in bookings]
+        # Use a set for faster lookup and store as strings to avoid ObjectId mismatches
+        booked_slot_ids = {str(b['time_slot']) for b in bookings}
         
         slots = Slot.find_all({
             'enabled': True, 
@@ -43,21 +46,12 @@ def get_availability(date):
             'rate_type': rate_type
         })
         slots = sort_slots(slots)
-        availability = []
-        now = datetime.now()
-        today_str = now.strftime('%Y-%m-%d')
-        current_time_str = now.strftime('%H:%M')
         
+        availability = []
         for slot in slots:
             slot_id = str(slot['_id'])
-            is_booked = slot_id in booked_slots
-            
-            # Check if slot is in the past (if date is today)
-            is_past = False
-            if date == today_str:
-                slot_start_time = slot['time'].split('-')[0]
-                if slot_start_time < current_time_str:
-                    is_past = True
+            is_booked = slot_id in booked_slot_ids
+            is_past = is_past_slot(slot['time'], date)
             
             availability.append({
                 '_id': slot_id,
@@ -71,6 +65,8 @@ def get_availability(date):
         
         return jsonify(availability)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 400
 
 @api_bp.route('/book', methods=['POST'])

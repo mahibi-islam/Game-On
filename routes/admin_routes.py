@@ -6,7 +6,7 @@ from models.admin import Admin
 from models.booking import Booking
 from models.slot import Slot
 from models.settings import Settings
-from utils.slot_utils import sort_slots
+from utils.slot_utils import sort_slots, get_bangladesh_now, get_bangladesh_tz
 from db import mongo
 from werkzeug.utils import secure_filename
 import os
@@ -63,7 +63,8 @@ def logout():
 @admin_required
 def dashboard():
     """Admin dashboard"""
-    today = datetime.now().strftime('%Y-%m-%d')
+    now_bangladesh = get_bangladesh_now()
+    today = now_bangladesh.strftime('%Y-%m-%d')
     today_bookings = Booking.count({'date': today})
     upcoming_bookings = Booking.count({
         'date': {'$gte': today},
@@ -158,7 +159,8 @@ def dashboard():
 def bookings():
     """View all bookings"""
     filter_type = request.args.get('filter', 'all')
-    today = datetime.now().strftime('%Y-%m-%d')
+    now_bangladesh = get_bangladesh_now()
+    today = now_bangladesh.strftime('%Y-%m-%d')
     
     query = {}
     if filter_type == 'today':
@@ -188,8 +190,8 @@ def bookings():
             if date_str and slot_time:
                 start_part = slot_time.split('-')[0]
                 h, m = [int(x) for x in start_part.split(':')]
-                slot_start = datetime.strptime(date_str, '%Y-%m-%d').replace(hour=h, minute=m, second=0, microsecond=0)
-                played = datetime.utcnow() >= slot_start and status != 'cancelled'
+                slot_start = datetime.strptime(date_str, '%Y-%m-%d').replace(hour=h, minute=m, second=0, microsecond=0, tzinfo=get_bangladesh_tz())
+                played = now_bangladesh >= slot_start and status != 'cancelled'
             booking['status_display'] = 'played' if played else status
         except Exception:
             booking['status_display'] = booking.get('status')
@@ -213,8 +215,8 @@ def update_booking(booking_id, action):
             try:
                 start_part = slot['time'].split('-')[0]
                 h, m = [int(x) for x in start_part.split(':')]
-                slot_start = datetime.strptime(booking['date'], '%Y-%m-%d').replace(hour=h, minute=m, second=0, microsecond=0)
-                if datetime.utcnow() >= slot_start:
+                slot_start = datetime.strptime(booking['date'], '%Y-%m-%d').replace(hour=h, minute=m, second=0, microsecond=0, tzinfo=get_bangladesh_tz())
+                if get_bangladesh_now() >= slot_start:
                     return jsonify({'error': 'Cannot cancel a past slot'}), 400
             except Exception:
                 pass
@@ -340,7 +342,7 @@ def upload_gallery():
         'filename': filename,
         'path': f'gallery/{filename}',
         'type': file_type,
-        'uploaded_at': datetime.now()
+        'uploaded_at': get_bangladesh_now()
     })
     
     return jsonify({'success': True, 'filename': filename})
@@ -382,7 +384,7 @@ def upload_carousel_image():
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
     
-    filename = secure_filename(f"{int(datetime.now().timestamp())}_{file.filename}")
+    filename = secure_filename(f"{int(get_bangladesh_now().timestamp())}_{file.filename}")
     filepath = os.path.join('static/carousel', filename)
     file.save(filepath)
     

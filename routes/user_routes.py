@@ -6,7 +6,7 @@ from models.user import get_current_user
 from db import mongo
 from datetime import datetime, timedelta
 from bson import ObjectId
-from utils.slot_utils import sort_slots
+from utils.slot_utils import sort_slots, get_bangladesh_now, get_bangladesh_tz
 
 user_bp = Blueprint('user', __name__)
 
@@ -54,8 +54,9 @@ def profile():
         user_id_query['$or'].append({'phone': user.get('phone')})
 
     bookings = Booking.find_all(user_id_query, sort=[('created_at', -1)])
-
-    today = datetime.utcnow().date()
+    
+    now_bangladesh = get_bangladesh_now()
+    today = now_bangladesh.date()
     bookings_view = []
 
     for booking in bookings:
@@ -79,8 +80,8 @@ def profile():
                 start_time_part = slot_time_str.split('-')[0]
                 start_hour, start_minute = [int(x) for x in start_time_part.split(':')]
                 slot_start_dt = datetime.strptime(date_str, '%Y-%m-%d')
-                slot_start_dt = slot_start_dt.replace(hour=start_hour, minute=start_minute, second=0, microsecond=0)
-                can_cancel = (slot_start_dt - datetime.utcnow()) >= timedelta(hours=48) and booking.get('status') != 'cancelled'
+                slot_start_dt = slot_start_dt.replace(hour=start_hour, minute=start_minute, second=0, microsecond=0, tzinfo=get_bangladesh_tz())
+                can_cancel = (slot_start_dt - now_bangladesh) >= timedelta(hours=48) and booking.get('status') != 'cancelled'
             except Exception:
                 can_cancel = False
         booking_copy['can_cancel'] = can_cancel
@@ -90,8 +91,8 @@ def profile():
             if date_str and slot_time_str:
                 start_time_part = slot_time_str.split('-')[0]
                 start_hour, start_minute = [int(x) for x in start_time_part.split(':')]
-                slot_start_dt = datetime.strptime(date_str, '%Y-%m-%d').replace(hour=start_hour, minute=start_minute, second=0, microsecond=0)
-                if datetime.utcnow() >= slot_start_dt and booking.get('status') != 'cancelled':
+                slot_start_dt = datetime.strptime(date_str, '%Y-%m-%d').replace(hour=start_hour, minute=start_minute, second=0, microsecond=0, tzinfo=get_bangladesh_tz())
+                if now_bangladesh >= slot_start_dt and booking.get('status') != 'cancelled':
                     booking_copy['status_display'] = 'played'
                 else:
                     booking_copy['status_display'] = booking.get('status')
@@ -170,7 +171,7 @@ def contact():
             'email': request.form.get('email'),
             'phone': request.form.get('phone'),
             'message': request.form.get('message'),
-            'created_at': datetime.now()
+            'created_at': get_bangladesh_now()
         })
         flash('Message sent successfully!', 'success')
         return redirect(url_for('user.contact'))
@@ -225,16 +226,17 @@ def cancel_booking(booking_id):
         start_time_part = slot['time'].split('-')[0]
         start_hour, start_minute = [int(x) for x in start_time_part.split(':')]
         slot_start_dt = datetime.strptime(date_str, '%Y-%m-%d')
-        slot_start_dt = slot_start_dt.replace(hour=start_hour, minute=start_minute, second=0, microsecond=0)
+        slot_start_dt = slot_start_dt.replace(hour=start_hour, minute=start_minute, second=0, microsecond=0, tzinfo=get_bangladesh_tz())
     except Exception:
         flash('Unable to cancel this booking.', 'error')
         return redirect(url_for('user.profile'))
 
-    if datetime.utcnow() >= slot_start_dt:
+    now_bangladesh = get_bangladesh_now()
+    if now_bangladesh >= slot_start_dt:
         flash('Slot time has passed. Cannot cancel.', 'error')
         return redirect(url_for('user.profile'))
 
-    if (slot_start_dt - datetime.utcnow()) < timedelta(hours=48):
+    if (slot_start_dt - now_bangladesh) < timedelta(hours=48):
         flash('Please call to cancel the booking', 'error')
         return redirect(url_for('user.profile'))
 

@@ -1,6 +1,7 @@
 from db import mongo
 from datetime import datetime
 from bson import ObjectId
+from utils.slot_utils import get_bangladesh_now
 import openpyxl
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
@@ -51,7 +52,7 @@ class Booking:
             'amount': data.get('amount'),
             'status': data.get('status', 'pending'),
             'notes': data.get('notes', ''),
-            'created_at': datetime.now().isoformat()
+            'created_at': get_bangladesh_now().isoformat()
         }
         result = Booking.get_collection().insert_one(booking_data)
         booking_data['_id'] = str(result.inserted_id)
