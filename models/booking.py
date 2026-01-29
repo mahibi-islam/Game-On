@@ -73,11 +73,22 @@ class Booking:
     @staticmethod
     def find_by_date_and_slot(date, time_slot):
         """Find booking by date and time slot"""
-        return Booking.get_collection().find_one({
+        query = {
             'date': date,
-            'time_slot': time_slot,
             'status': {'$in': ['pending', 'approved', 'paid']}
-        })
+        }
+        
+        # Handle string vs ObjectId for time_slot by checking both
+        if isinstance(time_slot, (str, ObjectId)):
+            ts_str = str(time_slot)
+            if len(ts_str) == 24:
+                query['time_slot'] = {'$in': [ts_str, ObjectId(ts_str)]}
+            else:
+                query['time_slot'] = time_slot
+        else:
+            query['time_slot'] = time_slot
+            
+        return Booking.get_collection().find_one(query)
     
     @staticmethod
     def find_all(query=None, sort=None, limit=None):

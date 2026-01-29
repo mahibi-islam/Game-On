@@ -220,23 +220,39 @@
                     return;
                 }
 
-                container.innerHTML = data.map(slot => `
-                <div class="slot-card ${slot.available ? 'available' : 'booked'}" 
-                      data-slot-id="${slot._id}" 
-                      data-time="${slot.time}" 
-                      data-price="${slot.price}"
-                      onclick="${slot.available ? `selectSlot('${slot._id}', '${slot.time}', ${slot.price}, ${slot.discount_active}, ${slot.discount_percent})` : ''}">
-                    <div class="slot-time">${slot.time}</div>
-                    <div class="slot-price">
-                        ${slot.discount_active ?
-                        `<span style="text-decoration: line-through; color: #888; font-size: 0.8em;">৳${slot.price}</span> ৳${slot.price * (1 - slot.discount_percent / 100)}
-                             <div style="font-size: 0.7em; color: var(--primary-color);">(${slot.discount_percent}% OFF)</div>` :
-                        `৳${slot.price}`
+                container.innerHTML = data.map(slot => {
+                    let statusClass = 'available';
+                    let statusText = 'Available';
+
+                    if (slot.is_booked) {
+                        statusClass = 'booked';
+                        statusText = 'Booked';
+                    } else if (slot.is_pending) {
+                        statusClass = 'pending';
+                        statusText = 'Pending';
+                    } else if (slot.is_past) {
+                        statusClass = 'past';
+                        statusText = 'Unavailable';
                     }
+
+                    return `
+                    <div class="slot-card ${statusClass}" 
+                          data-slot-id="${slot._id}" 
+                          data-time="${slot.time}" 
+                          data-price="${slot.price}"
+                          onclick="${slot.available ? `selectSlot('${slot._id}', '${slot.time}', ${slot.price}, ${slot.discount_active}, ${slot.discount_percent})` : ''}">
+                        <div class="slot-time">${slot.time}</div>
+                        <div class="slot-price">
+                            ${slot.discount_active ?
+                            `<span style="text-decoration: line-through; color: #888; font-size: 0.8em;">৳${slot.price}</span> ৳${slot.price * (1 - slot.discount_percent / 100)}
+                                 <div style="font-size: 0.7em; color: var(--primary-color);">(${slot.discount_percent}% OFF)</div>` :
+                            `৳${slot.price}`
+                        }
+                        </div>
+                        <div class="slot-status">${statusText}</div>
                     </div>
-                    <div class="slot-status">${slot.available ? 'Available' : 'Booked'}</div>
-                </div>
-            `).join('');
+                `;
+                }).join('');
             })
             .catch(err => {
                 container.innerHTML = '<p class="error">Error loading slots</p>';

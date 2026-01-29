@@ -32,6 +32,7 @@
         <span class="legend-item"><span class="legend-box available"></span> Available</span>
         <span class="legend-item"><span class="legend-box booked"></span> Booked</span>
         <span class="legend-item"><span class="legend-box pending"></span> Pending</span>
+        <span class="legend-item"><span class="legend-box past"></span> Unavailable</span>
     </div>
 
     <div class="availability-table-container" id="availability-table-container">
@@ -114,9 +115,16 @@
                 tbody.innerHTML = data.map(slot => {
                     let statusClass = 'available';
                     let statusText = 'Available';
-                    if (!slot.available) {
+
+                    if (slot.is_booked) {
                         statusClass = 'booked';
                         statusText = 'Booked';
+                    } else if (slot.is_pending) {
+                        statusClass = 'pending';
+                        statusText = 'Pending';
+                    } else if (slot.is_past) {
+                        statusClass = 'past';
+                        statusText = 'Unavailable';
                     }
 
                     return `

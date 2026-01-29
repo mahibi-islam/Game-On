@@ -33,12 +33,11 @@ def get_availability(date):
         is_weekend = date_obj.weekday() in [4, 5]
         rate_type = 'weekend' if is_weekend else 'weekday'
         
-        bookings = Booking.find_all({
-            'date': date,
-            'status': {'$in': ['pending', 'approved', 'paid']}
-        })
-        # Use a set for faster lookup and store as strings to avoid ObjectId mismatches
-        booked_slot_ids = {str(b['time_slot']) for b in bookings}
+        # Get all bookings for the date to distinguish statuses
+        bookings = Booking.find_all({'date': date})
+        
+        booked_slot_ids = {str(b['time_slot']) for b in bookings if b.get('status') in ['approved', 'paid']}
+        pending_slot_ids = {str(b['time_slot']) for b in bookings if b.get('status') == 'pending'}
         
         slots = Slot.find_all({
             'enabled': True, 
@@ -51,7 +50,11 @@ def get_availability(date):
         for slot in slots:
             slot_id = str(slot['_id'])
             is_booked = slot_id in booked_slot_ids
+            is_pending = slot_id in pending_slot_ids
             is_past = is_past_slot(slot['time'], date)
+            
+            # available is ONLY True if it's not booked, not pending AND not in the past
+            is_available = not is_booked and not is_pending and not is_past
             
             availability.append({
                 '_id': slot_id,
@@ -60,7 +63,10 @@ def get_availability(date):
                 'sport': slot.get('sport', 'football'),
                 'discount_active': slot.get('discount_active', False),
                 'discount_percent': slot.get('discount_percent', 0),
-                'available': not is_booked and not is_past
+                'available': is_available,
+                'is_booked': is_booked,
+                'is_pending': is_pending,
+                'is_past': is_past
             })
         
         return jsonify(availability)

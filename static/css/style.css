@@ -328,8 +328,23 @@ section {
 }
 
 .slot-card.booked {
+    background: #f82a17;
+    color: white;
+    border-color: #f82a17;
+    cursor: not-allowed;
+}
+
+.slot-card.pending {
+    background: var(--warning-color);
+    color: white;
+    border-color: var(--warning-color);
+    cursor: not-allowed;
+}
+
+.slot-card.past {
     background: #f5f5f5;
-    border-color: var(--danger-color);
+    color: #999;
+    border-color: #ddd;
     cursor: not-allowed;
     opacity: 0.6;
 }
@@ -405,6 +420,11 @@ section {
 .status-badge.paid {
     background: #d1ecf1;
     color: #0c5460;
+}
+
+.status-badge.past {
+    background: #e9ecef;
+    color: #6c757d;
 }
 
 /* Gallery */
@@ -697,11 +717,16 @@ section {
 }
 
 .legend-box.booked {
-    background: var(--danger-color);
+    background: #f82a17;
 }
 
 .legend-box.pending {
     background: var(--warning-color);
+}
+
+.legend-box.past {
+    background: #e9ecef;
+    border: 1px solid #ddd;
 }
 
 .auto-refresh-label {
