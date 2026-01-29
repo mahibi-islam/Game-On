@@ -6,6 +6,7 @@ from models.admin import Admin
 from models.booking import Booking
 from models.slot import Slot
 from models.settings import Settings
+from utils.slot_utils import sort_slots
 from db import mongo
 from werkzeug.utils import secure_filename
 import os
@@ -254,7 +255,8 @@ def create_manual_booking():
         flash('Booking created successfully', 'success')
         return redirect(url_for('admin.bookings'))
     
-    slots = Slot.find_all({'enabled': True}, sort=[('time', 1)])
+    slots = Slot.find_all({'enabled': True})
+    slots = sort_slots(slots)
     return render_template('admin/create_booking.html', slots=slots)
 
 # ==================== Slots Management ====================
@@ -263,8 +265,12 @@ def create_manual_booking():
 @admin_required
 def slots():
     """View all slots"""
-    football_slots = Slot.find_all({'sport': 'football'}, sort=[('time', 1)])
-    badminton_slots = Slot.find_all({'sport': 'badminton'}, sort=[('time', 1)])
+    football_slots = Slot.find_all({'sport': 'football'})
+    badminton_slots = Slot.find_all({'sport': 'badminton'})
+    
+    football_slots = sort_slots(football_slots)
+    badminton_slots = sort_slots(badminton_slots)
+    
     return render_template('admin/slots.html', football_slots=football_slots, badminton_slots=badminton_slots)
 
 @admin_bp.route('/slot/create', methods=['POST'])

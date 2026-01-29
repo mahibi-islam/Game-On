@@ -6,6 +6,7 @@ from models.user import get_current_user
 from db import mongo
 from datetime import datetime, timedelta
 from bson import ObjectId
+from utils.slot_utils import sort_slots
 
 user_bp = Blueprint('user', __name__)
 
@@ -135,8 +136,12 @@ def availability():
 @user_bp.route('/pricing')
 def pricing():
     """Pricing page"""
-    football_slots = Slot.find_all({'enabled': True, 'sport': 'football'}, sort=[('time', 1)])
-    badminton_slots = Slot.find_all({'enabled': True, 'sport': 'badminton'}, sort=[('time', 1)])
+    football_slots = Slot.find_all({'enabled': True, 'sport': 'football'})
+    badminton_slots = Slot.find_all({'enabled': True, 'sport': 'badminton'})
+    
+    football_slots = sort_slots(football_slots)
+    badminton_slots = sort_slots(badminton_slots)
+    
     return render_template('pricing.html', football_slots=football_slots, badminton_slots=badminton_slots)
 
 @user_bp.route('/facilities')

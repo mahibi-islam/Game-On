@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, session
 from datetime import datetime
 from models.slot import Slot
 from models.booking import Booking
+from utils.slot_utils import sort_slots
 
 api_bp = Blueprint('api', __name__)
 
@@ -9,7 +10,8 @@ api_bp = Blueprint('api', __name__)
 def get_slots():
     """Get all enabled slots"""
     sport = request.args.get('sport', 'football')
-    slots = Slot.find_all({'enabled': True, 'sport': sport}, sort=[('time', 1)])
+    slots = Slot.find_all({'enabled': True, 'sport': sport})
+    slots = sort_slots(slots)
     return jsonify([{
         '_id': str(slot['_id']),
         'time': slot['time'],
@@ -39,7 +41,8 @@ def get_availability(date):
             'enabled': True, 
             'sport': sport,
             'rate_type': rate_type
-        }, sort=[('time', 1)])
+        })
+        slots = sort_slots(slots)
         availability = []
         now = datetime.now()
         today_str = now.strftime('%Y-%m-%d')
