@@ -31,7 +31,7 @@ class Settings:
                 'address': 'Gohail Road,Bogura',
                 'phone': '+8801780037275',
                 'whatsapp': '+8801780037275',
-                'email': 'gameon.bogura@gmail.com',
+                'email': 'bogura.gameon@gmail.com',
                 'facebook': 'https://www.facebook.com/share/1ADMmWtRMw/',
                 'rules': 'Please maintain cleanliness. No smoking allowed.',
                 'homepage_content': 'Welcome to GAME ON BOGURA!'
