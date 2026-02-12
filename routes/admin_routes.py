@@ -98,7 +98,8 @@ def dashboard():
     
     # Get slot details for recent bookings
     for booking in recent_bookings:
-        slot = Slot.find_by_id(booking['time_slot'])
+        slot_id = booking.get('time_slot')
+        slot = Slot.find_by_id(slot_id) if slot_id else None
         booking['slot_time'] = slot['time'] if slot else 'N/A'
     
     # Data for Slot Performance (Bar Chart)
@@ -174,7 +175,8 @@ def bookings():
     
     # Get slot details for each booking
     for booking in bookings_list:
-        slot = Slot.find_by_id(booking['time_slot'])
+        slot_id = booking.get('time_slot')
+        slot = Slot.find_by_id(slot_id) if slot_id else None
         booking['slot_time'] = slot['time'] if slot else 'N/A'
         
         # Fallback for missing booking_id
@@ -210,7 +212,7 @@ def update_booking(booking_id, action):
         Booking.update(booking_id, {'status': 'approved'})
     elif action == 'cancel':
         # Prevent cancelling if slot already passed
-        slot = Slot.find_by_id(booking['time_slot']) if booking.get('time_slot') else None
+        slot = Slot.find_by_id(booking.get('time_slot')) if booking.get('time_slot') else None
         if slot and booking.get('date'):
             try:
                 start_part = slot['time'].split('-')[0]
@@ -367,7 +369,8 @@ def payments():
     """Payments management"""
     bookings_list = Booking.find_all(sort=[('created_at', -1)])
     for booking in bookings_list:
-        slot = Slot.find_by_id(booking['time_slot'])
+        slot_id = booking.get('time_slot')
+        slot = Slot.find_by_id(slot_id) if slot_id else None
         booking['slot_time'] = slot['time'] if slot else 'N/A'
     return render_template('admin/payments.html', bookings=bookings_list)
 
