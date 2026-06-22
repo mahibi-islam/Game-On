@@ -4,6 +4,10 @@
     box-sizing: border-box;
 }
 
+input, select, textarea, button {
+    font-family: inherit;
+}
+
 :root {
     --primary-color: #00ff88;
     --secondary-color: #1a1a1a;
@@ -819,30 +823,7 @@ section {
     margin: 3rem 0;
 }
 
-.quick-availability {
-    background: white;
-    padding: 2rem;
-    border-radius: 10px;
-    margin: 2rem 0;
-}
 
-.availability-preview {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.availability-result {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: #f8f9fa;
-    border-radius: 5px;
-}
-
-.availability-summary h3 {
-    margin-bottom: 0.5rem;
-}
 
 .testimonials-grid {
     display: grid;

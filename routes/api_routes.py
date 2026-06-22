@@ -23,18 +23,33 @@ def get_slots():
 
 @api_bp.route('/availability/<date>')
 def get_availability(date):
-    """Get availability for a specific date"""
+    """Get availability for a specific date and location"""
     try:
         from utils.slot_utils import get_bangladesh_now, is_past_slot
+        from models.location import Location
+        from bson import ObjectId
         
         date_obj = datetime.strptime(date, '%Y-%m-%d')
         sport = request.args.get('sport', 'football')
+        location_id = request.args.get('location_id')
+        
+        # Default to first active location if not provided
+        if not location_id or location_id == 'undefined' or location_id == 'null':
+            locs = Location.find_all({'enabled': True})
+            if locs:
+                location_id = str(locs[0]['_id'])
+            else:
+                return jsonify({'error': 'No active locations found'}), 400
+        
         # Friday is 4, Saturday is 5 in weekday() (Monday=0, Sunday=6)
         is_weekend = date_obj.weekday() in [4, 5]
         rate_type = 'weekend' if is_weekend else 'weekday'
         
-        # Get all bookings for the date to distinguish statuses
-        bookings = Booking.find_all({'date': date})
+        # Get bookings for this date and location to optimize check
+        bookings = Booking.find_all({
+            'date': date,
+            'location_id': ObjectId(location_id) if len(location_id) == 24 else location_id
+        })
         
         booked_slot_ids = {str(b['time_slot']) for b in bookings if b.get('status') in ['approved', 'paid']}
         pending_slot_ids = {str(b['time_slot']) for b in bookings if b.get('status') == 'pending'}
@@ -42,7 +57,8 @@ def get_availability(date):
         slots = Slot.find_all({
             'enabled': True, 
             'sport': sport,
-            'rate_type': rate_type
+            'rate_type': rate_type,
+            'location_id': ObjectId(location_id) if len(location_id) == 24 else location_id
         })
         slots = sort_slots(slots)
         
@@ -66,7 +82,8 @@ def get_availability(date):
                 'available': is_available,
                 'is_booked': is_booked,
                 'is_pending': is_pending,
-                'is_past': is_past
+                'is_past': is_past,
+                'location_id': str(slot.get('location_id')) if slot.get('location_id') else None
             })
         
         return jsonify(availability)
@@ -79,6 +96,7 @@ def get_availability(date):
 def create_booking():
     """Create a new booking"""
     try:
+        from bson import ObjectId
         # Require user authentication
         if not session.get('user_logged_in'):
             return jsonify({'error': 'Authentication required. Please log in to book.'}), 401
@@ -108,7 +126,8 @@ def create_booking():
             'amount': slot['price'] * (1 - float(slot.get('discount_percent', 0)) / 100) if slot.get('discount_active') else slot['price'],
             'status': 'pending',
             'notes': data.get('notes', ''),
-            'user_id': str(session.get('user_id')) if session.get('user_id') else None
+            'user_id': str(session.get('user_id')) if session.get('user_id') else None,
+            'location_id': str(slot['location_id']) if slot.get('location_id') else None
         }
         
         booking = Booking.create(booking_data)
@@ -122,5 +141,7 @@ def create_booking():
             'booking': booking
         })
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 400
 

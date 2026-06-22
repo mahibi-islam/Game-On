@@ -1,8 +1,13 @@
+import time
 from db import mongo
 
 class Settings:
     """Settings model"""
     COLLECTION = 'settings'
+    
+    _cache = None
+    _cache_time = 0
+    CACHE_DURATION = 15  # seconds
     
     @staticmethod
     def get_collection():
@@ -11,16 +16,28 @@ class Settings:
     @staticmethod
     def find_one():
         """Get settings"""
-        return Settings.get_collection().find_one()
+        now = time.time()
+        if Settings._cache is None or (now - Settings._cache_time) > Settings.CACHE_DURATION:
+            data = Settings.get_collection().find_one()
+            Settings._cache = dict(data) if data else None
+            Settings._cache_time = now
+        return dict(Settings._cache) if Settings._cache else None
     
     @staticmethod
     def update(data):
         """Update settings"""
-        return Settings.get_collection().update_one(
+        result = Settings.get_collection().update_one(
             {},
             {'$set': data},
             upsert=True
         )
+        Settings.clear_cache()
+        return result
+        
+    @staticmethod
+    def clear_cache():
+        Settings._cache = None
+        Settings._cache_time = 0
     
     @staticmethod
     def init_defaults():
@@ -34,6 +51,8 @@ class Settings:
                 'email': 'bogura.gameon@gmail.com',
                 'facebook': 'https://www.facebook.com/share/1ADMmWtRMw/',
                 'rules': 'Please maintain cleanliness. No smoking allowed.',
-                'homepage_content': 'Welcome to GAME ON BOGURA!'
+                'homepage_content': 'Welcome to GAME ON'
             })
+            Settings.clear_cache()
+
 

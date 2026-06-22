@@ -18,6 +18,13 @@
     color: var(--text-color);
 }
 
+.admin-body input, 
+.admin-body select, 
+.admin-body textarea, 
+.admin-body button {
+    font-family: inherit;
+}
+
 .admin-sidebar {
     width: 250px;
     background: var(--dark-color);

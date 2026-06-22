@@ -52,10 +52,13 @@ class Booking:
             'amount': data.get('amount'),
             'status': data.get('status', 'pending'),
             'notes': data.get('notes', ''),
-            'created_at': get_bangladesh_now().isoformat()
+            'created_at': get_bangladesh_now().isoformat(),
+            'location_id': ObjectId(data.get('location_id')) if data.get('location_id') else None
         }
         result = Booking.get_collection().insert_one(booking_data)
         booking_data['_id'] = str(result.inserted_id)
+        if booking_data.get('location_id'):
+            booking_data['location_id'] = str(booking_data['location_id'])
         
         # Write to Excel
         Booking.write_to_excel(booking_data)
@@ -192,13 +195,13 @@ class Booking:
             # Check if headers exist
             if not worksheet.row_values(1):
                 headers = [
-                    'Booking ID', 'Date', 'Time Slot', 'Name', 'Phone', 
+                    'Booking ID', 'Date', 'Location', 'Time Slot', 'Name', 'Phone', 
                     'Team Name', 'Payment Method', 'Amount', 'Status', 
                     'Transaction ID', 'Notes', 'Created At'
                 ]
                 worksheet.append_row(headers)
                 # Format header row
-                worksheet.format('A1:L1', {
+                worksheet.format('A1:M1', {
                     'backgroundColor': {'red': 0.2, 'green': 0.38, 'blue': 0.57},
                     'textFormat': {'bold': True, 'foregroundColor': {'red': 1, 'green': 1, 'blue': 1}}
                 })
@@ -217,7 +220,7 @@ class Booking:
             ws = wb.active
             ws.title = "Bookings"
             headers = [
-                'Booking ID', 'Date', 'Time Slot', 'Name', 'Phone', 
+                'Booking ID', 'Date', 'Location', 'Time Slot', 'Name', 'Phone', 
                 'Team Name', 'Payment Method', 'Amount', 'Status', 
                 'Transaction ID', 'Notes', 'Created At'
             ]
@@ -241,6 +244,7 @@ class Booking:
         """Write booking to Excel and Google Sheets"""
         
         from models.slot import Slot
+        from models.location import Location
         slot_id = booking_data.get('time_slot')
         slot = None
         if slot_id:
@@ -255,6 +259,16 @@ class Booking:
         
         slot_time = slot.get('time', 'N/A') if slot else 'N/A'
         
+        # Resolve location name
+        location_name = 'N/A'
+        loc_id = booking_data.get('location_id')
+        if not loc_id and slot:
+            loc_id = slot.get('location_id')
+        if loc_id:
+            loc = Location.find_by_id(str(loc_id))
+            if loc:
+                location_name = loc.get('name', 'N/A')
+        
      
         display_id = booking_data.get('booking_id')
         if not display_id:
@@ -267,7 +281,7 @@ class Booking:
         if display_id and not display_id.startswith('#'):
             display_id = f"#{display_id}"
 
-        print(f"Debug: Exporting Booking - ID: {display_id}, Time: {slot_time}")
+        print(f"Debug: Exporting Booking - ID: {display_id}, Location: {location_name}, Time: {slot_time}")
 
       
         try:
@@ -282,6 +296,7 @@ class Booking:
             row = [
                 display_id,
                 booking_data.get('date', ''),
+                location_name,
                 slot_time,
                 booking_data.get('name', ''),
                 booking_data.get('phone', ''),
@@ -322,6 +337,7 @@ class Booking:
         """Update booking in Excel and Google Sheets"""
    
         from models.slot import Slot
+        from models.location import Location
         slot_id = updated_data.get('time_slot')
         slot = None
         if slot_id:
@@ -335,6 +351,15 @@ class Booking:
                 slot = None
         slot_time = slot.get('time', '') if slot else ''
 
+        # Resolve location name
+        location_name = ''
+        loc_id = updated_data.get('location_id')
+        if not loc_id and slot:
+            loc_id = slot.get('location_id')
+        if loc_id:
+            loc = Location.find_by_id(str(loc_id))
+            if loc:
+                location_name = loc.get('name', '')
         
         try:
             excel_file = Booking.get_excel_file_path()
@@ -355,16 +380,18 @@ class Booking:
                
                 if row[0].value == id_to_find or row[0].value == alt_id or (isinstance(row[0].value, str) and row[0].value.replace('#','') == alt_id.replace('#','')):
                     row[1].value = updated_data.get('date', row[1].value)
+                    if location_name:
+                        row[2].value = location_name
                     if slot_time:
-                        row[2].value = slot_time
-                    row[3].value = updated_data.get('name', row[3].value)
-                    row[4].value = updated_data.get('phone', row[4].value)
-                    row[5].value = updated_data.get('team_name', row[5].value)
-                    row[6].value = updated_data.get('payment_method', row[6].value)
-                    row[7].value = updated_data.get('amount', row[7].value)
-                    row[8].value = updated_data.get('status', row[8].value)
-                    row[9].value = updated_data.get('transaction_id', row[9].value)
-                    row[10].value = updated_data.get('notes', row[10].value)
+                        row[3].value = slot_time
+                    row[4].value = updated_data.get('name', row[4].value)
+                    row[5].value = updated_data.get('phone', row[5].value)
+                    row[6].value = updated_data.get('team_name', row[6].value)
+                    row[7].value = updated_data.get('payment_method', row[7].value)
+                    row[8].value = updated_data.get('amount', row[8].value)
+                    row[9].value = updated_data.get('status', row[9].value)
+                    row[10].value = updated_data.get('transaction_id', row[10].value)
+                    row[11].value = updated_data.get('notes', row[11].value)
                     found = True
                     break
             
@@ -387,15 +414,16 @@ class Booking:
                 if cell:
                     row_num = cell.row
                     if updated_data.get('date'): worksheet.update_cell(row_num, 2, updated_data.get('date'))
-                    if slot_time: worksheet.update_cell(row_num, 3, slot_time)
-                    if updated_data.get('name'): worksheet.update_cell(row_num, 4, updated_data.get('name'))
-                    if updated_data.get('phone'): worksheet.update_cell(row_num, 5, updated_data.get('phone'))
-                    if updated_data.get('team_name'): worksheet.update_cell(row_num, 6, updated_data.get('team_name'))
-                    if updated_data.get('payment_method'): worksheet.update_cell(row_num, 7, updated_data.get('payment_method'))
-                    if updated_data.get('amount'): worksheet.update_cell(row_num, 8, updated_data.get('amount'))
-                    if updated_data.get('status'): worksheet.update_cell(row_num, 9, updated_data.get('status'))
-                    if updated_data.get('transaction_id'): worksheet.update_cell(row_num, 10, updated_data.get('transaction_id'))
-                    if updated_data.get('notes'): worksheet.update_cell(row_num, 11, updated_data.get('notes'))
+                    if location_name: worksheet.update_cell(row_num, 3, location_name)
+                    if slot_time: worksheet.update_cell(row_num, 4, slot_time)
+                    if updated_data.get('name'): worksheet.update_cell(row_num, 5, updated_data.get('name'))
+                    if updated_data.get('phone'): worksheet.update_cell(row_num, 6, updated_data.get('phone'))
+                    if updated_data.get('team_name'): worksheet.update_cell(row_num, 7, updated_data.get('team_name'))
+                    if updated_data.get('payment_method'): worksheet.update_cell(row_num, 8, updated_data.get('payment_method'))
+                    if updated_data.get('amount'): worksheet.update_cell(row_num, 9, updated_data.get('amount'))
+                    if updated_data.get('status'): worksheet.update_cell(row_num, 10, updated_data.get('status'))
+                    if updated_data.get('transaction_id'): worksheet.update_cell(row_num, 11, updated_data.get('transaction_id'))
+                    if updated_data.get('notes'): worksheet.update_cell(row_num, 12, updated_data.get('notes'))
         except Exception as e:
             print(f"Error updating Google Sheets: {e}")
     

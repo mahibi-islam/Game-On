@@ -14,6 +14,7 @@ auth_bp = Blueprint('auth', __name__)
 @auth_bp.route('/signup', methods=['GET', 'POST'])
 def signup():
     settings = Settings.find_one()
+    next_url = request.args.get('next') or request.form.get('next') or url_for('user.index')
     if request.method == 'POST':
         data = {
             'first_name': request.form.get('first_name', '').strip(),
@@ -30,21 +31,21 @@ def signup():
         required = ['first_name', 'last_name', 'email', 'phone', 'password']
         if any(not data[k] for k in required):
             flash('Please fill in all required fields', 'error')
-            return render_template('auth/signup.html', settings=settings)
+            return render_template('auth/signup.html', settings=settings, next=next_url)
 
         # Uniqueness checks
         if mongo.db.users.find_one({'email': data['email']}):
             flash('Email already registered', 'error')
-            return render_template('auth/signup.html', settings=settings)
+            return render_template('auth/signup.html', settings=settings, next=next_url)
         if mongo.db.users.find_one({'phone': data['phone']}):
             flash('Phone already registered', 'error')
-            return render_template('auth/signup.html', settings=settings)
+            return render_template('auth/signup.html', settings=settings, next=next_url)
 
         try:
             nomad_id = create_user(data)
         except Exception as e:
             flash(f'Error creating user: {e}', 'error')
-            return render_template('auth/signup.html', settings=settings)
+            return render_template('auth/signup.html', settings=settings, next=next_url)
 
         user = mongo.db.users.find_one({'user_id': nomad_id})
         if user:
@@ -52,9 +53,9 @@ def signup():
             session['user_id'] = str(user['_id'])
             session['user_name'] = user.get('first_name', 'User')
             flash('Account created successfully!', 'success')
-            return redirect(url_for('user.index'))
+            return redirect(next_url)
 
-    return render_template('auth/signup.html', settings=settings)
+    return render_template('auth/signup.html', settings=settings, next=next_url)
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])

@@ -25,12 +25,18 @@ def index():
 @user_bp.route('/booking')
 def booking():
     """Booking page"""
-    if not session.get('user_logged_in'):
-        flash('Please log in to book a slot.', 'error')
-        return redirect(url_for('auth.login', next=url_for('user.booking')))
+    loc_param = request.args.get('location')
+    sport_param = request.args.get('sport')
+    date_param = request.args.get('date')
+    slot_param = request.args.get('slot')
+    
     settings = Settings.find_one()
     user = get_current_user()
-    return render_template('booking.html', settings=settings, user=user)
+    return render_template('booking.html', settings=settings, user=user, 
+                           preselected_location_id=loc_param,
+                           preselected_sport=sport_param,
+                           preselected_date=date_param,
+                           preselected_slot_id=slot_param)
 
 
 @user_bp.route('/profile')
@@ -55,6 +61,55 @@ def profile():
 
     bookings = Booking.find_all(user_id_query, sort=[('created_at', -1)])
     
+    # Collect all slot IDs
+    slot_ids = set()
+    for booking in bookings:
+        if booking.get('time_slot'):
+            slot_ids.add(booking['time_slot'])
+            
+    # Fetch all slots in a single query
+    slot_object_ids = []
+    for sid in slot_ids:
+        if isinstance(sid, ObjectId):
+            slot_object_ids.append(sid)
+        elif isinstance(sid, str) and len(sid) == 24:
+            slot_object_ids.append(ObjectId(sid))
+        else:
+            slot_object_ids.append(sid)
+            
+    slots_list = Slot.find_all({'_id': {'$in': slot_object_ids}})
+    slots_map = {str(s['_id']): s for s in slots_list}
+    
+    # Collect all location IDs
+    loc_ids = set()
+    for slot in slots_list:
+        if slot.get('location_id'):
+            loc_ids.add(slot['location_id'])
+    for booking in bookings:
+        if booking.get('location_id'):
+            loc_ids.add(booking['location_id'])
+            
+    # Fetch all locations in a single query
+    loc_object_ids = []
+    for lid in loc_ids:
+        if isinstance(lid, ObjectId):
+            loc_object_ids.append(lid)
+        elif isinstance(lid, str) and len(lid) == 24:
+            loc_object_ids.append(ObjectId(lid))
+        else:
+            loc_object_ids.append(lid)
+            
+    from models.location import Location
+    locations_list = Location.find_all({'_id': {'$in': loc_object_ids}})
+    locations_map = {str(l['_id']): l for l in locations_list}
+    
+    # Helper to get slot/location safely
+    def get_slot(sid):
+        return slots_map.get(str(sid)) if sid else None
+        
+    def get_location(lid):
+        return locations_map.get(str(lid)) if lid else None
+        
     now_bangladesh = get_bangladesh_now()
     today = now_bangladesh.date()
     bookings_view = []
@@ -63,13 +118,13 @@ def profile():
         booking_copy = dict(booking)
         booking_copy['_id'] = str(booking.get('_id')) if booking.get('_id') else ''
 
-        # Attach slot time for readability
-        slot = None
-        try:
-            slot = Slot.find_by_id(booking.get('time_slot')) if booking.get('time_slot') else None
-        except Exception:
-            slot = None
+        # Attach slot time and location for readability
+        slot = get_slot(booking.get('time_slot'))
         booking_copy['slot_time'] = slot['time'] if slot else 'N/A'
+
+        loc_id = booking.get('location_id') or (slot.get('location_id') if slot else None)
+        location = get_location(loc_id)
+        booking_copy['location_name'] = location.get('name') if location else 'N/A'
 
         # Determine cancel eligibility (>= 48 hours before slot start and not already cancelled)
         can_cancel = False
@@ -143,7 +198,9 @@ def pricing():
     football_slots = sort_slots(football_slots)
     badminton_slots = sort_slots(badminton_slots)
     
-    return render_template('pricing.html', football_slots=football_slots, badminton_slots=badminton_slots)
+    preselected_location_id = request.args.get('location')
+    
+    return render_template('pricing.html', football_slots=football_slots, badminton_slots=badminton_slots, preselected_location_id=preselected_location_id)
 
 @user_bp.route('/facilities')
 def facilities():
@@ -187,8 +244,11 @@ def booking_confirmation(booking_id):
         return redirect(url_for('user.index'))
     
     slot = Slot.find_by_id(booking['time_slot'])
+    from models.location import Location
+    loc_id = booking.get('location_id') or (slot.get('location_id') if slot else None)
+    location = Location.find_by_id(str(loc_id)) if loc_id else None
     settings = Settings.find_one()
-    return render_template('booking_confirmation.html', booking=booking, slot=slot, settings=settings)
+    return render_template('booking_confirmation.html', booking=booking, slot=slot, location=location, settings=settings)
 
 
 @user_bp.route('/booking/<booking_id>/cancel', methods=['POST'])

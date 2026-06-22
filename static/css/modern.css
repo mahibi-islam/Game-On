@@ -1,6 +1,10 @@
 /* Modern Theme - Glassmorphism & Premium Feel */
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
 
+input, select, textarea, button {
+    font-family: inherit;
+}
+
 :root {
     --primary-color: #00ff88;
     --primary-dark: #00cc6a;
@@ -372,7 +376,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* Fixes for White Backgrounds */
 .pricing-table,
-.quick-availability,
 .rules-section,
 .contact-card,
 .availability-table {
@@ -400,19 +403,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .pricing-table tr:hover,
 .availability-table tr:hover {
     background: rgba(255, 255, 255, 0.05);
-}
-
-/* Fix Quick Availability Inputs */
-.quick-availability input,
-.quick-availability select {
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid var(--glass-border) !important;
-    color: white !important;
-}
-
-.quick-availability input:focus {
-    background: rgba(255, 255, 255, 0.2) !important;
-    border-color: var(--primary-color) !important;
 }
 
 /* Fix Info Cards Background */
@@ -614,4 +604,34 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 .booking-steps::before {
     background: rgba(255, 255, 255, 0.1);
+}
+
+/* Generic Table Styles for User Profile and general pages */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    color: var(--text-primary);
+}
+
+.table th,
+.table td {
+    padding: 1.2rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--glass-border);
+    vertical-align: middle;
+}
+
+.table th {
+    background: rgba(0, 255, 136, 0.05);
+    color: var(--primary-color);
+    font-weight: 600;
+    border-bottom: 2px solid var(--primary-color);
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
 }

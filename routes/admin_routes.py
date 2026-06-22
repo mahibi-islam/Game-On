@@ -84,23 +84,7 @@ def dashboard():
     ]
     popular_slots = list(Booking.aggregate(pipeline))
     
-    # Enrich popular slots with slot details
-    for slot_data in popular_slots:
-        slot = Slot.find_by_id(slot_data['_id'])
-        if slot:
-            slot_data['time'] = slot.get('time', 'N/A')
-            slot_data['sport'] = slot.get('sport', 'N/A').title()
-        else:
-            slot_data['time'] = 'N/A'
-            slot_data['sport'] = 'N/A'
-    
     recent_bookings = Booking.find_all(sort=[('created_at', -1)], limit=10)
-    
-    # Get slot details for recent bookings
-    for booking in recent_bookings:
-        slot_id = booking.get('time_slot')
-        slot = Slot.find_by_id(slot_id) if slot_id else None
-        booking['slot_time'] = slot['time'] if slot else 'N/A'
     
     # Data for Slot Performance (Bar Chart)
     # We already have popular_slots, let's use all slots that have bookings
@@ -108,6 +92,88 @@ def dashboard():
         {'$match': {'status': {'$in': ['pending', 'approved', 'paid']}}},
         {'$group': {'_id': '$time_slot', 'count': {'$sum': 1}}}
     ]))
+
+    # Collect all slot IDs we will need details for
+    slot_ids = set()
+    for slot_data in popular_slots:
+        if slot_data.get('_id'):
+            slot_ids.add(slot_data['_id'])
+    for booking in recent_bookings:
+        if booking.get('time_slot'):
+            slot_ids.add(booking['time_slot'])
+    for item in all_slot_counts:
+        if item.get('_id'):
+            slot_ids.add(item['_id'])
+            
+    # Fetch all slots in a single query
+    slot_object_ids = []
+    for sid in slot_ids:
+        if isinstance(sid, ObjectId):
+            slot_object_ids.append(sid)
+        elif isinstance(sid, str) and len(sid) == 24:
+            slot_object_ids.append(ObjectId(sid))
+        else:
+            slot_object_ids.append(sid)
+            
+    slots_list = Slot.find_all({'_id': {'$in': slot_object_ids}})
+    slots_map = {str(s['_id']): s for s in slots_list}
+    
+    # Collect all location IDs
+    loc_ids = set()
+    for slot in slots_list:
+        if slot.get('location_id'):
+            loc_ids.add(slot['location_id'])
+    for booking in recent_bookings:
+        if booking.get('location_id'):
+            loc_ids.add(booking['location_id'])
+            
+    # Fetch all locations in a single query
+    loc_object_ids = []
+    for lid in loc_ids:
+        if isinstance(lid, ObjectId):
+            loc_object_ids.append(lid)
+        elif isinstance(lid, str) and len(lid) == 24:
+            loc_object_ids.append(ObjectId(lid))
+        else:
+            loc_object_ids.append(lid)
+            
+    from models.location import Location
+    locations_list = Location.find_all({'_id': {'$in': loc_object_ids}})
+    locations_map = {str(l['_id']): l for l in locations_list}
+    
+    # Helper to get slot/location safely from maps
+    def get_slot(sid):
+        return slots_map.get(str(sid)) if sid else None
+        
+    def get_location(lid):
+        return locations_map.get(str(lid)) if lid else None
+    
+    # Enrich popular slots with slot details
+    for slot_data in popular_slots:
+        slot = get_slot(slot_data['_id'])
+        if slot:
+            slot_data['time'] = slot.get('time', 'N/A')
+            slot_data['sport'] = slot.get('sport', 'N/A').title()
+            
+            # Fetch location for popular slot
+            loc_id = slot.get('location_id')
+            loc = get_location(loc_id)
+            slot_data['location_name'] = loc.get('name', 'N/A') if loc else 'N/A'
+        else:
+            slot_data['time'] = 'N/A'
+            slot_data['sport'] = 'N/A'
+            slot_data['location_name'] = 'N/A'
+    
+    # Get slot details for recent bookings
+    for booking in recent_bookings:
+        slot_id = booking.get('time_slot')
+        slot = get_slot(slot_id)
+        booking['slot_time'] = slot['time'] if slot else 'N/A'
+        
+        # Fetch location for recent booking
+        loc_id = booking.get('location_id') or (slot.get('location_id') if slot else None)
+        loc = get_location(loc_id)
+        booking['location_name'] = loc.get('name', 'N/A') if loc else 'N/A'
     
     performance_labels = []
     performance_values = []
@@ -121,7 +187,7 @@ def dashboard():
     }
     
     for item in all_slot_counts:
-        slot = Slot.find_by_id(item['_id'])
+        slot = get_slot(item['_id'])
         if slot:
             time_str = slot.get('time', 'N/A')
             sport_name = slot.get('sport', 'football').title()
@@ -160,6 +226,7 @@ def dashboard():
 def bookings():
     """View all bookings"""
     filter_type = request.args.get('filter', 'all')
+    selected_location_id = request.args.get('location_id', 'all')
     now_bangladesh = get_bangladesh_now()
     today = now_bangladesh.strftime('%Y-%m-%d')
     
@@ -170,14 +237,71 @@ def bookings():
         query['status'] = 'pending'
     elif filter_type == 'approved':
         query['status'] = 'approved'
+        
+    if selected_location_id != 'all':
+        query['location_id'] = ObjectId(selected_location_id) if len(selected_location_id) == 24 else selected_location_id
     
     bookings_list = Booking.find_all(query, sort=[('created_at', -1)])
     
+    # Collect all slot IDs
+    slot_ids = set()
+    for booking in bookings_list:
+        if booking.get('time_slot'):
+            slot_ids.add(booking['time_slot'])
+            
+    # Fetch all slots in a single query
+    slot_object_ids = []
+    for sid in slot_ids:
+        if isinstance(sid, ObjectId):
+            slot_object_ids.append(sid)
+        elif isinstance(sid, str) and len(sid) == 24:
+            slot_object_ids.append(ObjectId(sid))
+        else:
+            slot_object_ids.append(sid)
+            
+    slots_list = Slot.find_all({'_id': {'$in': slot_object_ids}})
+    slots_map = {str(s['_id']): s for s in slots_list}
+    
+    # Collect all location IDs
+    loc_ids = set()
+    for slot in slots_list:
+        if slot.get('location_id'):
+            loc_ids.add(slot['location_id'])
+    for booking in bookings_list:
+        if booking.get('location_id'):
+            loc_ids.add(booking['location_id'])
+            
+    # Fetch all locations in a single query
+    loc_object_ids = []
+    for lid in loc_ids:
+        if isinstance(lid, ObjectId):
+            loc_object_ids.append(lid)
+        elif isinstance(lid, str) and len(lid) == 24:
+            loc_object_ids.append(ObjectId(lid))
+        else:
+            loc_object_ids.append(lid)
+            
+    from models.location import Location
+    locations_list = Location.find_all({'_id': {'$in': loc_object_ids}})
+    locations_map = {str(l['_id']): l for l in locations_list}
+    
+    # Helper to get slot/location safely
+    def get_slot(sid):
+        return slots_map.get(str(sid)) if sid else None
+        
+    def get_location(lid):
+        return locations_map.get(str(lid)) if lid else None
+        
     # Get slot details for each booking
     for booking in bookings_list:
         slot_id = booking.get('time_slot')
-        slot = Slot.find_by_id(slot_id) if slot_id else None
+        slot = get_slot(slot_id)
         booking['slot_time'] = slot['time'] if slot else 'N/A'
+        
+        # Fetch location
+        loc_id = booking.get('location_id') or (slot.get('location_id') if slot else None)
+        loc = get_location(loc_id)
+        booking['location_name'] = loc.get('name', 'N/A') if loc else 'N/A'
         
         # Fallback for missing booking_id
         if not booking.get('booking_id'):
@@ -198,7 +322,10 @@ def bookings():
         except Exception:
             booking['status_display'] = booking.get('status')
     
-    return render_template('admin/bookings.html', bookings=bookings_list, filter_type=filter_type)
+    from models.location import Location
+    locations_list = Location.find_all()
+    
+    return render_template('admin/bookings.html', bookings=bookings_list, filter_type=filter_type, locations=locations_list, selected_location_id=selected_location_id)
 
 @admin_bp.route('/booking/<booking_id>/<action>', methods=['POST'])
 @admin_required
@@ -234,6 +361,7 @@ def update_booking(booking_id, action):
 @admin_required
 def create_manual_booking():
     """Create manual booking"""
+    from models.location import Location
     if request.method == 'POST':
         data = request.form
         slot = Slot.find_by_id(data.get('time_slot'))
@@ -245,6 +373,7 @@ def create_manual_booking():
         booking_data = {
             'date': data.get('date'),
             'time_slot': data.get('time_slot'),
+            'location_id': str(slot.get('location_id')) if slot.get('location_id') else data.get('location_id'),
             'name': data.get('name'),
             'phone': data.get('phone'),
             'team_name': data.get('team_name', ''),
@@ -259,9 +388,10 @@ def create_manual_booking():
         flash('Booking created successfully', 'success')
         return redirect(url_for('admin.bookings'))
     
+    locations = Location.find_all()
     slots = Slot.find_all({'enabled': True})
     slots = sort_slots(slots)
-    return render_template('admin/create_booking.html', slots=slots)
+    return render_template('admin/create_booking.html', slots=slots, locations=locations)
 
 # ==================== Slots Management ====================
 
@@ -275,7 +405,10 @@ def slots():
     football_slots = sort_slots(football_slots)
     badminton_slots = sort_slots(badminton_slots)
     
-    return render_template('admin/slots.html', football_slots=football_slots, badminton_slots=badminton_slots)
+    from models.location import Location
+    locations = Location.find_all()
+    
+    return render_template('admin/slots.html', football_slots=football_slots, badminton_slots=badminton_slots, locations=locations)
 
 @admin_bp.route('/slot/create', methods=['POST'])
 @admin_required
@@ -368,9 +501,29 @@ def delete_gallery_item(gallery_id):
 def payments():
     """Payments management"""
     bookings_list = Booking.find_all(sort=[('created_at', -1)])
+    
+    # Collect all slot IDs
+    slot_ids = set()
+    for booking in bookings_list:
+        if booking.get('time_slot'):
+            slot_ids.add(booking['time_slot'])
+            
+    # Fetch all slots in a single query
+    slot_object_ids = []
+    for sid in slot_ids:
+        if isinstance(sid, ObjectId):
+            slot_object_ids.append(sid)
+        elif isinstance(sid, str) and len(sid) == 24:
+            slot_object_ids.append(ObjectId(sid))
+        else:
+            slot_object_ids.append(sid)
+            
+    slots_list = Slot.find_all({'_id': {'$in': slot_object_ids}})
+    slots_map = {str(s['_id']): s for s in slots_list}
+    
     for booking in bookings_list:
         slot_id = booking.get('time_slot')
-        slot = Slot.find_by_id(slot_id) if slot_id else None
+        slot = slots_map.get(str(slot_id)) if slot_id else None
         booking['slot_time'] = slot['time'] if slot else 'N/A'
     return render_template('admin/payments.html', bookings=bookings_list)
 
@@ -472,4 +625,74 @@ def delete_message(message_id):
     ContactMessage.delete(message_id)
     flash('Message deleted successfully.', 'success')
     return redirect(url_for('admin.messages'))
+
+
+# ==================== Locations Management ====================
+
+@admin_bp.route('/locations')
+@admin_required
+def locations():
+    """View all locations"""
+    from models.location import Location
+    locations_list = Location.find_all()
+    return render_template('admin/locations.html', locations=locations_list)
+
+@admin_bp.route('/location/create', methods=['GET', 'POST'])
+@admin_required
+def create_location():
+    """Create a new location"""
+    from models.location import Location
+    if request.method == 'POST':
+        data = {
+            'name': request.form.get('name'),
+            'address': request.form.get('address'),
+            'phone': request.form.get('phone'),
+            'whatsapp': request.form.get('whatsapp'),
+            'email': request.form.get('email'),
+            'rules': request.form.get('rules'),
+            'homepage_content': request.form.get('homepage_content'),
+            'enabled': request.form.get('enabled') == 'true'
+        }
+        Location.create(data)
+        flash('Location created successfully', 'success')
+        return redirect(url_for('admin.locations'))
+    
+    return render_template('admin/create_location.html')
+
+@admin_bp.route('/location/<location_id>/update', methods=['GET', 'POST'])
+@admin_required
+def update_location(location_id):
+    """Update a location"""
+    from models.location import Location
+    location = Location.find_by_id(location_id)
+    if not location:
+        flash('Location not found', 'error')
+        return redirect(url_for('admin.locations'))
+        
+    if request.method == 'POST':
+        data = {
+            'name': request.form.get('name'),
+            'address': request.form.get('address'),
+            'phone': request.form.get('phone'),
+            'whatsapp': request.form.get('whatsapp'),
+            'email': request.form.get('email'),
+            'rules': request.form.get('rules'),
+            'homepage_content': request.form.get('homepage_content'),
+            'enabled': request.form.get('enabled') == 'true'
+        }
+        Location.update(location_id, data)
+        flash('Location updated successfully', 'success')
+        return redirect(url_for('admin.locations'))
+        
+    return render_template('admin/edit_location.html', location=location)
+
+@admin_bp.route('/location/<location_id>/delete', methods=['POST'])
+@admin_required
+def delete_location(location_id):
+    """Delete a location"""
+    from models.location import Location
+    Location.delete(location_id)
+    flash('Location deleted successfully', 'success')
+    return redirect(url_for('admin.locations'))
+
 

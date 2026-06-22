@@ -40,20 +40,24 @@ def create_app(config_name='development'):
     app.register_blueprint(auth_bp)
     
     # Global context processor
-    @app.context_processor
+    @app.context_processor 
     def inject_settings():
         from models.settings import Settings
+        from models.location import Location
         settings = Settings.find_one()
-        return dict(settings=settings)
+        active_locations = Location.find_all({'enabled': True})
+        return dict(settings=settings, active_locations=active_locations)
     
     # Initialize database
     from models.booking import Booking
     from models.slot import Slot
     from models.admin import Admin
     from models.settings import Settings
+    from models.location import Location
     
     with app.app_context():
         Booking.init_excel()
+        Location.init_defaults()
         Booking.init_defaults()
         Slot.init_defaults()
         Admin.init_defaults()
