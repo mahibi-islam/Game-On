@@ -1,97 +1,126 @@
 {% extends "base.html" %}
 
-{% block title %}Contact - {{ settings.turf_name if settings else 'GAME ON BOGURA' }}{% endblock %}
+{% block title %}Contact - GAME ON{% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="page-title">Contact Us</h1>
+<!-- Centered Header -->
+<div style="text-align: center; width: 100%; margin-top: 3rem;">
+    <h1 class="page-title" style="font-weight: 700;">Contact Us</h1>
+</div>
+
+<div class="container" style="padding: 1rem 1.5rem 3rem; max-width: 1100px;">
     
-    <div class="contact-container">
-        <div class="contact-info">
-            <h2>Get in Touch</h2>
-            
-            {% if settings %}
-            <div class="contact-item">
-                <i class="fas fa-phone"></i>
-                <div>
-                    <h3>Phone</h3>
-                    <p><a href="tel:{{ settings.phone }}">{{ settings.phone }}</a></p>
-                </div>
-            </div>
-            
-            <div class="contact-item">
-                <i class="fab fa-whatsapp"></i>
-                <div>
-                    <h3>WhatsApp</h3>
-                    <p><a href="https://wa.me/{{ settings.whatsapp.replace('+', '').replace(' ', '') }}" target="_blank">{{ settings.whatsapp }}</a></p>
-                </div>
-            </div>
-            
-            <div class="contact-item">
-                <i class="fas fa-envelope"></i>
-                <div>
-                    <h3>Email</h3>
-                    <p><a href="mailto:{{ settings.email }}">{{ settings.email }}</a></p>
-                </div>
-            </div>
-            
-            {% if settings.facebook %}
-            <div class="contact-item">
-                <i class="fab fa-facebook"></i>
-                <div>
-                    <h3>Facebook</h3>
-                    <p><a href="{{ settings.facebook }}" target="_blank">Visit our page</a></p>
-                </div>
-            </div>
-            {% endif %}
-            
-            <div class="contact-item">
-                <i class="fas fa-map-marker-alt"></i>
-                <div>
-                    <h3>Address</h3>
-                    <p>{{ settings.address }}</p>
-                </div>
-            </div>
-            {% endif %}
-        </div>
+    <!-- Two side-by-side columns: Bogura and Khulna -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 2.5rem; margin-bottom: 4rem;">
         
-        <div class="contact-form-container">
-            <h2>Send us a Message</h2>
-            <form method="POST" class="contact-form">
-                <div class="form-group">
-                    <label for="name">Name *</label>
-                    <input type="text" id="name" name="name" class="form-control" required>
+        {% for loc in active_locations %}
+        <!-- Location Column -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <!-- Contact Card -->
+            <div class="booking-step-content" style="padding: 2rem; border-radius: 16px; border: 1px solid var(--glass-border); background: var(--gradient-card); box-shadow: 0 10px 30px rgba(0,0,0,0.3); flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h3 style="color: var(--primary-color); margin-bottom: 1.5rem; font-size: 1.4rem; font-weight: bold; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-futbol"></i> {{ loc.name }}
+                    </h3>
+                    
+                    <!-- Address -->
+                    <div style="margin-bottom: 1.2rem; display: flex; align-items: flex-start; gap: 12px;">
+                        <div style="width: 24px; display: flex; justify-content: center; margin-top: 3px;">
+                            <i class="fas fa-map-marker-alt" style="color: var(--primary-color); font-size: 1.25rem;"></i>
+                        </div>
+                        <div>
+                            <strong style="display: block; font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px;">Address</strong>
+                            <p style="font-size: 0.95rem; line-height: 1.4; color: #fff; margin-top: 2px;">{{ loc.address }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Phone -->
+                    <div style="margin-bottom: 1.2rem; display: flex; align-items: flex-start; gap: 12px;">
+                        <div style="width: 24px; display: flex; justify-content: center; margin-top: 3px;">
+                            <i class="fas fa-phone" style="color: var(--primary-color); font-size: 1.25rem;"></i>
+                        </div>
+                        <div>
+                            <strong style="display: block; font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px;">Phone</strong>
+                            <p style="font-size: 0.95rem; margin-top: 2px;"><a href="tel:{{ loc.phone }}" style="color: #fff; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#fff'">{{ loc.phone }}</a></p>
+                        </div>
+                    </div>
+
+                    <!-- WhatsApp -->
+                    <div style="margin-bottom: 1.2rem; display: flex; align-items: flex-start; gap: 12px;">
+                        <div style="width: 24px; display: flex; justify-content: center; margin-top: 3px;">
+                            <i class="fab fa-whatsapp" style="color: var(--primary-color); font-size: 1.25rem;"></i>
+                        </div>
+                        <div>
+                            <strong style="display: block; font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px;">WhatsApp</strong>
+                            <p style="font-size: 0.95rem; margin-top: 2px;">
+                                <a href="https://wa.me/{{ loc.whatsapp.replace('+', '').replace(' ', '').replace('-', '') }}" target="_blank" style="color: #fff; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#fff'">
+                                    {{ loc.whatsapp }}
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <div style="width: 24px; display: flex; justify-content: center; margin-top: 3px;">
+                            <i class="fas fa-envelope" style="color: var(--primary-color); font-size: 1.25rem;"></i>
+                        </div>
+                        <div>
+                            <strong style="display: block; font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px;">Email</strong>
+                            <p style="font-size: 0.95rem; margin-top: 2px;">
+                                {% if loc.email %}
+                                <a href="mailto:{{ loc.email }}" style="color: #fff; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#fff'">{{ loc.email }}</a>
+                                {% else %}
+                                <span style="color: var(--text-secondary); font-style: italic;">Not specified</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="email">Email *</label>
-                    <input type="email" id="email" name="email" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="phone">Phone</label>
-                    <input type="tel" id="phone" name="phone" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label for="message">Message *</label>
-                    <textarea id="message" name="message" class="form-control" rows="5" required></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary">Send Message</button>
-            </form>
+            </div>
+
+            <!-- Google Map for this location -->
+            <div class="glass-map" style="border-radius: 16px; overflow: hidden; border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.3); height: 320px;">
+                {% if 'KHULNA' in loc.name.upper() %}
+                <!-- Khulna Map -->
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3677.3712396113645!2d89.5444855!3d22.8256336!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39ff907085ef7c07%3A0xd64d9b4bcfb4661b!2sKhulna%20Sadar%2C%20Khulna!5e0!3m2!1sen!2sbd!4v1765229343849!5m2!1sen!2sbd"
+                    width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy">
+                </iframe>
+                {% else %}
+                <!-- Bogura Map -->
+                <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d452.6320298168447!2d89.3657475!3d24.8277503!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39fc55006b6c9c99%3A0xed4fc12bada09a6!2sGame%20ON%20Bogura!5e0!3m2!1sen!2sbd!4v1765229343848!5m2!1sen!2sbd"
+                    width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy">
+                </iframe>
+                {% endif %}
+            </div>
         </div>
+        {% endfor %}
     </div>
-    
-    {% if settings %}
-    <div class="map-container">
-          <iframe
-                src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d452.6320298168447!2d89.3657475!3d24.8277503!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39fc55006b6c9c99%3A0xed4fc12bada09a6!2sGame%20ON%20Bogura!5e0!3m2!1sen!2sbd!4v1765229343848!5m2!1sen!2sbd"
-            
-                width="100%"
-                height="400"
-                style="border:0;"
-                allowfullscreen=""
-                loading="lazy">
-            </iframe>
+
+    <!-- Center-Aligned Contact Form -->
+    <div class="contact-form-container" style="max-width: 650px; margin: 0 auto; padding: 2.5rem; border-radius: 16px; border: 1px solid var(--glass-border); background: var(--gradient-card); box-shadow: 0 10px 30px rgba(0,0,0,0.3); width: 100%;">
+        <h2 style="margin-bottom: 1.5rem; text-align: center; font-size: 1.8rem; font-weight: 600;">Send us a Message</h2>
+        <form method="POST" class="contact-form">
+            <div class="form-group">
+                <label for="name">Name *</label>
+                <input type="text" id="name" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" name="phone" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="message">Message *</label>
+                <textarea id="message" name="message" class="form-control" rows="5" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.05rem; padding: 12px; font-weight: bold; margin-top: 1rem;">
+                Send Message <i class="fas fa-paper-plane" style="margin-left: 5px;"></i>
+            </button>
+        </form>
     </div>
-    {% endif %}
 </div>
 {% endblock %}
-

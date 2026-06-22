@@ -2,29 +2,204 @@
 
 {% block title %}Availability - {{ settings.turf_name if settings else 'GAME ON BOGURA' }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .availability-card {
+        background: var(--gradient-card);
+        border: 1px solid var(--glass-border);
+        border-radius: 20px;
+        padding: 2.2rem 2rem;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+    }
+
+    .availability-steps-grid {
+        display: grid;
+        grid-template-columns: 1.25fr 1.25fr 1.5fr;
+        gap: 2rem;
+        align-items: start;
+    }
+
+    .control-step h3 {
+        font-size: 1rem;
+        color: var(--primary-color) !important;
+        margin-top: 0;
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .control-step .step-badge {
+        background: var(--primary-color);
+        color: #000;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .select-wrapper {
+        position: relative;
+    }
+
+    .select-wrapper select {
+        padding-left: 2.8rem !important;
+        cursor: pointer;
+    }
+
+    .select-wrapper i {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--primary-color);
+        font-size: 1.1rem;
+        pointer-events: none;
+    }
+
+    .availability-sport-container {
+        display: flex;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .availability-sport-container .sport-card {
+        flex: 1;
+        width: auto;
+        padding: 12px 10px;
+        border-radius: 12px;
+        margin: 0;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--glass-border);
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .availability-sport-container .sport-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+    }
+
+    .availability-sport-container .sport-card.selected {
+        background: rgba(0, 255, 136, 0.1);
+        border-color: var(--primary-color);
+        box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+    }
+
+    .availability-sport-container .sport-icon {
+        font-size: 1.6rem;
+        color: var(--primary-color);
+        margin-bottom: 6px;
+    }
+
+    .availability-sport-container h3 {
+        font-size: 0.95rem;
+        margin: 0;
+        font-weight: 600;
+        color: var(--text-primary) !important;
+    }
+
+    .date-input-wrapper {
+        position: relative;
+        flex: 1;
+    }
+
+    .date-input-wrapper input {
+        padding-left: 2.8rem !important;
+    }
+
+    .date-input-wrapper i {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--primary-color);
+        font-size: 1.1rem;
+        pointer-events: none;
+    }
+
+    @media (max-width: 992px) {
+        .availability-steps-grid {
+            grid-template-columns: 1fr;
+            gap: 1.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <h1 class="page-title">Live Slot Availability</h1>
 
-    <div class="availability-controls">
-        <div class="sport-selection-container small-cards">
-            <div class="sport-card selected" onclick="selectSport('football', this)">
-                <div class="sport-icon"><i class="fas fa-futbol"></i></div>
-                <h3>Football</h3>
+    <div class="availability-card">
+        <div class="availability-steps-grid">
+            <!-- Step 1: Location Selection -->
+            <div class="control-step">
+                <h3>
+                    <span class="step-badge">1</span>
+                    Select Location
+                </h3>
+                <div class="select-wrapper">
+                    <select id="location-select" class="form-control" onchange="loadAvailability()" style="margin-top: 0;">
+                        {% for loc in active_locations %}
+                        <option value="{{ loc._id }}">{{ loc.name.replace('GAME ON ', '') }}</option>
+                        {% endfor %}
+                    </select>
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
             </div>
-            <div class="sport-card" onclick="selectSport('badminton', this)">
-                <div class="sport-icon"><i class="fas fa-table-tennis"></i></div>
-                <h3>Badminton</h3>
+
+            <!-- Step 2: Sport Selection -->
+            <div class="control-step">
+                <h3>
+                    <span class="step-badge">2</span>
+                    Select Sport
+                </h3>
+                <div class="availability-sport-container">
+                    <div class="sport-card selected" onclick="selectSport('football', this)">
+                        <div class="sport-icon"><i class="fas fa-futbol"></i></div>
+                        <h3>Football</h3>
+                    </div>
+                    <div class="sport-card" onclick="selectSport('badminton', this)">
+                        <div class="sport-icon"><i class="fas fa-table-tennis"></i></div>
+                        <h3>Badminton</h3>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="control-row">
-            <input type="date" id="availability-date" class="form-control" min="">
-            <button onclick="loadAvailability()" class="btn btn-primary">
-                <i class="fas fa-sync-alt"></i> Refresh
-            </button>
-            <label class="auto-refresh-label">
-                <input type="checkbox" id="auto-refresh"> Auto Refresh (30s)
-            </label>
+
+            <!-- Step 3: Date Selector -->
+            <div class="control-step">
+                <h3>
+                    <span class="step-badge">3</span>
+                    Select Date
+                </h3>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; gap: 10px; width: 100%;">
+                        <div class="date-input-wrapper">
+                            <input type="date" id="availability-date" class="form-control" style="margin-top: 0;">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <button onclick="loadAvailability()" class="btn btn-primary" style="padding: 0 20px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div style="display: flex; justify-content: flex-start; padding-left: 5px;">
+                        <label class="auto-refresh-label" style="font-size: 0.9rem; color: var(--text-secondary); cursor: pointer; display: flex; align-items: center; gap: 8px; margin: 0;">
+                            <input type="checkbox" id="auto-refresh" style="accent-color: var(--primary-color); width: 16px; height: 16px; cursor: pointer; margin: 0;"> Auto Refresh (30s)
+                        </label>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -62,14 +237,22 @@
     // Set minimum date to today
     document.getElementById('availability-date').min = new Date().toISOString().split('T')[0];
 
-    // Check if date is in URL params
+    // Check if date, sport, location is in URL params
     const urlParams = new URLSearchParams(window.location.search);
     const dateParam = urlParams.get('date');
     const sportParam = urlParams.get('sport');
+    const locationParam = urlParams.get('location');
     let selectedSport = sportParam || 'football';
 
     if (sportParam) {
         selectSport(sportParam, null);
+    }
+
+    if (locationParam) {
+        const locSelect = document.getElementById('location-select');
+        if (locSelect) {
+            locSelect.value = locationParam;
+        }
     }
 
     if (dateParam) {
@@ -98,17 +281,18 @@
 
     function loadAvailability() {
         const date = document.getElementById('availability-date').value;
+        const locId = document.getElementById('location-select').value;
         if (!date) {
             alert('Please select a date');
             return;
         }
 
-        fetch(`/api/availability/${date}?sport=${selectedSport}`)
+        fetch(`/api/availability/${date}?sport=${selectedSport}&location_id=${locId}`)
             .then(res => res.json())
             .then(data => {
                 const tbody = document.getElementById('availability-tbody');
                 if (data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-center">No slots available</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center">No slots available for this location</td></tr>';
                     return;
                 }
 
@@ -141,7 +325,7 @@
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                         <td>
                             ${slot.available ?
-                            `<a href="/booking" class="btn btn-sm btn-primary">Book Now</a>` :
+                            `<a href="/booking?location=${encodeURIComponent(locId)}&sport=${encodeURIComponent(selectedSport)}&date=${encodeURIComponent(date)}&slot=${encodeURIComponent(slot._id)}" class="btn btn-sm btn-primary">Book Now</a>` :
                             '<span class="text-muted">Unavailable</span>'
                         }
                         </td>

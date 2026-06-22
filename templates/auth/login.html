@@ -20,7 +20,7 @@
         </div>
         <div style="margin-top:1rem; display:flex; flex-wrap: wrap; gap:.5rem; align-items: center;">
             <button type="submit" class="btn btn-primary">Login</button>
-            <a href="{{ url_for('auth.signup') }}" class="btn btn-secondary">Create Account</a>
+            <a href="{{ url_for('auth.signup', next=next) if next else url_for('auth.signup') }}" class="btn btn-secondary">Create Account</a>
             <a href="{{ url_for('auth.forgot_password') }}"
                 style="font-size: 0.9rem; color: var(--primary-color);">Forgot Password?</a>
         </div>

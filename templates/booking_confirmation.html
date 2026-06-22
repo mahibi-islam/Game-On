@@ -15,8 +15,18 @@
             <div class="confirmation-details">
                 <div class="detail-row">
                     <span class="detail-label">Booking ID:</span>
-                    <span class="detail-value">{{ booking._id }}</span>
+                    <span class="detail-value">{{ booking.booking_id if booking.booking_id else booking._id }}</span>
                 </div>
+                {% if location %}
+                <div class="detail-row">
+                    <span class="detail-label">Location:</span>
+                    <span class="detail-value" style="font-weight: bold; color: var(--primary-color);">{{ location.name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Address:</span>
+                    <span class="detail-value">{{ location.address }}</span>
+                </div>
+                {% endif %}
                 <div class="detail-row">
                     <span class="detail-label">Date:</span>
                     <span class="detail-value">{{ booking.date }}</span>
@@ -81,8 +91,9 @@ function shareWhatsApp() {
     const booking = {{ booking|tojson }};
     const slot = {{ slot|tojson if slot else '{}' }};
     const settings = {{ settings|tojson if settings else '{}' }};
+    const locationName = "{{ location.name if location else 'N/A' }}";
     const whatsapp = settings.whatsapp || '';
-    const message = `Booking Confirmed!\n\nBooking ID: ${booking._id}\nDate: ${booking.date}\nTime: ${slot.time || 'N/A'}\nAmount: ৳${booking.amount}\nPayment: ${booking.payment_method}`;
+    const message = `Booking Confirmed!\n\nBooking ID: ${booking.booking_id || booking._id}\nLocation: ${locationName}\nDate: ${booking.date}\nTime: ${slot.time || 'N/A'}\nAmount: ৳${booking.amount}\nPayment: ${booking.payment_method}`;
     const url = `https://wa.me/${whatsapp.replace('+', '').replace(' ', '')}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
 }

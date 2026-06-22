@@ -3,19 +3,29 @@
 {% block page_title %}Bookings Management{% endblock %}
 
 {% block content %}
-<div class="admin-actions">
+<div class="admin-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
     <a href="{{ url_for('admin.create_manual_booking') }}" class="btn btn-primary">
         <i class="fas fa-plus"></i> Create Manual Booking
     </a>
 
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <label for="filter-location-select" style="font-weight: bold; color: var(--primary-color); margin: 0;"><i class="fas fa-filter"></i> Venue Branch:</label>
+        <select id="filter-location-select" class="form-control" onchange="filterBookingsByLocation(this.value)" style="width: auto; min-width: 200px;">
+            <option value="all" {% if selected_location_id == 'all' %}selected{% endif %}>All Branches</option>
+            {% for loc in locations %}
+            <option value="{{ loc._id }}" {% if selected_location_id|string == loc._id|string %}selected{% endif %}>{{ loc.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
     <div class="filter-tabs">
-        <a href="{{ url_for('admin.bookings', filter='all') }}"
+        <a href="{{ url_for('admin.bookings', filter='all', location_id=selected_location_id) }}"
             class="filter-tab {{ 'active' if filter_type == 'all' else '' }}">All</a>
-        <a href="{{ url_for('admin.bookings', filter='today') }}"
+        <a href="{{ url_for('admin.bookings', filter='today', location_id=selected_location_id) }}"
             class="filter-tab {{ 'active' if filter_type == 'today' else '' }}">Today</a>
-        <a href="{{ url_for('admin.bookings', filter='pending') }}"
+        <a href="{{ url_for('admin.bookings', filter='pending', location_id=selected_location_id) }}"
             class="filter-tab {{ 'active' if filter_type == 'pending' else '' }}">Pending</a>
-        <a href="{{ url_for('admin.bookings', filter='approved') }}"
+        <a href="{{ url_for('admin.bookings', filter='approved', location_id=selected_location_id) }}"
             class="filter-tab {{ 'active' if filter_type == 'approved' else '' }}">Approved</a>
     </div>
 </div>
@@ -26,6 +36,7 @@
             <tr>
                 <th>Booking ID</th>
                 <th>Date</th>
+                <th>Location</th>
                 <th>Time Slot</th>
                 <th>Name</th>
                 <th>Phone</th>
@@ -41,6 +52,7 @@
             <tr>
                 <td>{% if booking.booking_id %}{{ booking.booking_id }}{% else %}#{{ booking._id }}{% endif %}</td>
                 <td>{{ booking.date }}</td>
+                <td style="font-weight: bold; color: var(--primary-color);">{{ booking.location_name }}</td>
                 <td>{{ booking.get('slot_time', 'N/A') }}</td>
                 <td>{{ booking.name }}</td>
                 <td>{{ booking.phone }}</td>
@@ -81,6 +93,12 @@
 
 {% block extra_js %}
 <script>
+    function filterBookingsByLocation(locId) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('location_id', locId);
+        window.location.href = url.toString();
+    }
+
     function updateBooking(bookingId, action) {
         if (!confirm(`Are you sure you want to ${action} this booking?`)) {
             return;

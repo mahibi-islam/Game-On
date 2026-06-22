@@ -50,6 +50,7 @@
                     <tr>
                         <th>Booking ID</th>
                         <th>Date</th>
+                        <th>Location</th>
                         <th>Time</th>
                         <th>Name</th>
                         <th>Phone</th>
@@ -63,6 +64,7 @@
                         <td>{% if booking.booking_id %}{{ booking.booking_id }}{% else %}#{{ booking._id }}{% endif %}
                         </td>
                         <td>{{ booking.date }}</td>
+                        <td style="font-weight: bold; color: var(--primary-color);">{{ booking.location_name }}</td>
                         <td>{{ booking.get('slot_time', 'N/A') }}</td>
                         <td>{{ booking.name }}</td>
                         <td>{{ booking.phone }}</td>
@@ -82,7 +84,7 @@
             <div class="popular-slot-item">
                 <div class="slot-info">
                     <span class="slot-time">{{ slot_data.time }}</span>
-                    <span class="slot-sport">{{ slot_data.sport }}</span>
+                    <span class="slot-sport">{{ slot_data.sport }} - <em style="font-size: 0.9em; color: var(--text-color);">{{ slot_data.location_name }}</em></span>
                 </div>
                 <span class="badge">{{ slot_data.count }} bookings</span>
             </div>

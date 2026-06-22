@@ -36,9 +36,12 @@
                 <input type="password" id="password" name="password" class="form-control" required>
             </div>
         </div>
+        {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
         <div style="margin-top:1rem; display:flex; gap:.5rem;">
             <button type="submit" class="btn btn-primary">Create Account</button>
-            <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Already have an account?</a>
+            <a href="{{ url_for('auth.login', next=next) if next else url_for('auth.login') }}" class="btn btn-secondary">Already have an account?</a>
         </div>
     </form>
 </section>

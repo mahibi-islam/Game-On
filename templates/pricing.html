@@ -73,6 +73,16 @@
 <div class="container">
     <h1 class="page-title">Pricing</h1>
 
+    <div style="margin: 20px auto; display: flex; align-items: center; gap: 10px; justify-content: center; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; width: fit-content;">
+        <label for="location-pricing-select" style="font-weight: bold; color: var(--primary-color); margin: 0;"><i class="fas fa-map-marker-alt"></i> View Rates For Location:</label>
+        <select id="location-pricing-select" class="form-control" onchange="filterPricingByLocation(this.value)" style="width: auto; min-width: 250px;">
+            <option value="all">All Locations</option>
+            {% for loc in active_locations %}
+            <option value="{{ loc._id }}">{{ loc.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
     <div class="pricing-info">
         <div class="info-card clickable-rate active" id="rate-weekday" onclick="toggleRates('weekday')">
             <h3><i class="fas fa-calendar-day"></i> Weekday Rates</h3>
@@ -92,6 +102,7 @@
                 <table class="pricing-table">
                     <thead>
                         <tr>
+                            <th>Location</th>
                             <th>Time Slot</th>
                             <th>Price (BDT)</th>
                             <th>Duration</th>
@@ -99,7 +110,14 @@
                     </thead>
                     <tbody>
                         {% for slot in football_slots if (not slot.rate_type or slot.rate_type == 'weekday') %}
-                        <tr>
+                        <tr class="pricing-row" data-location-id="{{ slot.location_id }}">
+                            <td style="font-weight: bold; color: var(--primary-color);">
+                                {% for loc in active_locations %}
+                                    {% if loc._id|string == slot.location_id|string %}
+                                        {{ loc.name }}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
                             <td>{{ slot.time }}</td>
                             <td class="price-cell">
                                 {% if slot.discount_active %}
@@ -125,6 +143,7 @@
                 <table class="pricing-table">
                     <thead>
                         <tr>
+                            <th>Location</th>
                             <th>Time Slot</th>
                             <th>Price (BDT)</th>
                             <th>Duration</th>
@@ -133,7 +152,14 @@
                     <tbody>
                         {% if football_slots|selectattr("rate_type", "equalto", "weekend")|list|length > 0 %}
                         {% for slot in football_slots if slot.rate_type == 'weekend' %}
-                        <tr>
+                        <tr class="pricing-row" data-location-id="{{ slot.location_id }}">
+                            <td style="font-weight: bold; color: var(--primary-color);">
+                                {% for loc in active_locations %}
+                                    {% if loc._id|string == slot.location_id|string %}
+                                        {{ loc.name }}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
                             <td>{{ slot.time }}</td>
                             <td class="price-cell">
                                 {% if slot.discount_active %}
@@ -151,7 +177,7 @@
                         {% endfor %}
                         {% else %}
                         <tr>
-                            <td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No
+                            <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No
                                 weekend rates defined yet.</td>
                         </tr>
                         {% endif %}
@@ -169,6 +195,7 @@
                 <table class="pricing-table">
                     <thead>
                         <tr>
+                            <th>Location</th>
                             <th>Time Slot</th>
                             <th>Price (BDT)</th>
                             <th>Duration</th>
@@ -176,7 +203,14 @@
                     </thead>
                     <tbody>
                         {% for slot in badminton_slots if (not slot.rate_type or slot.rate_type == 'weekday') %}
-                        <tr>
+                        <tr class="pricing-row" data-location-id="{{ slot.location_id }}">
+                            <td style="font-weight: bold; color: var(--primary-color);">
+                                {% for loc in active_locations %}
+                                    {% if loc._id|string == slot.location_id|string %}
+                                        {{ loc.name }}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
                             <td>{{ slot.time }}</td>
                             <td class="price-cell">
                                 {% if slot.discount_active %}
@@ -202,6 +236,7 @@
                 <table class="pricing-table">
                     <thead>
                         <tr>
+                            <th>Location</th>
                             <th>Time Slot</th>
                             <th>Price (BDT)</th>
                             <th>Duration</th>
@@ -210,7 +245,14 @@
                     <tbody>
                         {% if badminton_slots|selectattr("rate_type", "equalto", "weekend")|list|length > 0 %}
                         {% for slot in badminton_slots if slot.rate_type == 'weekend' %}
-                        <tr>
+                        <tr class="pricing-row" data-location-id="{{ slot.location_id }}">
+                            <td style="font-weight: bold; color: var(--primary-color);">
+                                {% for loc in active_locations %}
+                                    {% if loc._id|string == slot.location_id|string %}
+                                        {{ loc.name }}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
                             <td>{{ slot.time }}</td>
                             <td class="price-cell">
                                 {% if slot.discount_active %}
@@ -228,7 +270,7 @@
                         {% endfor %}
                         {% else %}
                         <tr>
-                            <td colspan="3" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No
+                            <td colspan="4" style="text-align: center; padding: 2rem; color: var(--text-secondary);">No
                                 weekend rates defined yet.</td>
                         </tr>
                         {% endif %}
@@ -258,6 +300,17 @@
 
 {% block extra_js %}
 <script>
+    function filterPricingByLocation(locId) {
+        const rows = document.querySelectorAll('.pricing-row');
+        rows.forEach(row => {
+            if (locId === 'all' || row.getAttribute('data-location-id') === locId) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
     function toggleRates(type) {
         // Toggle active state for cards
         document.getElementById('rate-weekday').classList.remove('active');
@@ -277,5 +330,16 @@
             block: 'start'
         });
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const preselectedLocId = "{{ preselected_location_id or '' }}";
+        if (preselectedLocId) {
+            const selectEl = document.getElementById('location-pricing-select');
+            if (selectEl) {
+                selectEl.value = preselectedLocId;
+                filterPricingByLocation(preselectedLocId);
+            }
+        }
+    });
 </script>
 {% endblock %}

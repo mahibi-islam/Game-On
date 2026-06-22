@@ -56,39 +56,44 @@
 
     <footer class="footer">
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>{{ settings.turf_name if settings else 'GAME ON BOGURA' }}</h3>
-                    <p>{{ settings.address if settings else '' }}</p>
+            <div class="footer-content" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2rem;">
+                <div class="footer-section" style="flex: 2; min-width: 280px;">
+                    <h3 style="margin-bottom: 1.2rem; color: var(--primary-color);">GAME ON</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
+                        Premium multi-location sports turf platform offering state-of-the-art facilities for football and badminton matches.
+                    </p>
+                    {% if settings and settings.facebook %}
+                    <a href="{{ settings.facebook }}" target="_blank" style="color: #fff; font-size: 1.5rem; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#fff'">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                    {% endif %}
                 </div>
-                <div class="footer-section">
-                    <h3>Quick Links</h3>
-                    <ul>
-                        <li><a href="{{ url_for('user.booking') }}">Book Now</a></li>
-                        <li><a href="{{ url_for('user.availability') }}">Availability</a></li>
-                        <li><a href="{{ url_for('user.pricing') }}">Pricing</a></li>
-                        <li><a href="{{ url_for('user.contact') }}">Contact</a></li>
+                
+                <div class="footer-section" style="flex: 2; min-width: 280px;">
+                    <h3 style="margin-bottom: 1.2rem;">Our Venues</h3>
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        {% for loc in active_locations %}
+                        <div style="font-size: 0.9rem;">
+                            <h4 style="color: var(--primary-color); margin-bottom: 4px; font-weight: 600;">{{ loc.name }}</h4>
+                            <p style="color: var(--text-secondary); margin-bottom: 2px; font-size: 0.85rem;"><i class="fas fa-map-marker-alt" style="margin-right: 5px; width: 12px;"></i> {{ loc.address }}</p>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem;"><i class="fas fa-phone" style="margin-right: 5px; width: 12px;"></i> {{ loc.phone }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="footer-section" style="flex: 1; min-width: 150px;">
+                    <h3 style="margin-bottom: 1.2rem;">Quick Links</h3>
+                    <ul style="list-style: none; padding: 0; margin: 0; line-height: 2;">
+                        <li><a href="{{ url_for('user.booking') }}" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-secondary)'">Book Now</a></li>
+                        <li><a href="{{ url_for('user.availability') }}" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-secondary)'">Availability</a></li>
+                        <li><a href="{{ url_for('user.pricing') }}" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-secondary)'">Pricing</a></li>
+                        <li><a href="{{ url_for('user.contact') }}" style="color: var(--text-secondary); text-decoration: none; font-size: 0.9rem;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='var(--text-secondary)'">Contact</a></li>
                     </ul>
                 </div>
-                <div class="footer-section">
-                    <h3>Contact</h3>
-                    <p><i class="fas fa-phone"></i> {{ settings.phone if settings else '' }}</p>
-                    <p><i class="fas fa-envelope"></i> {{ settings.email if settings else '' }}</p>
-                    {% if settings and settings.whatsapp %}
-                    <p><a href="https://wa.me/{{ settings.whatsapp.replace('+', '').replace(' ', '') }}"
-                            target="_blank">
-                            <i class="fab fa-whatsapp"></i> WhatsApp
-                        </a></p>
-                    {% endif %}
-                    {% if settings and settings.facebook %}
-                    <p><a href="{{ settings.facebook }}" target="_blank">
-                            <i class="fab fa-facebook"></i> Facebook
-                        </a></p>
-                    {% endif %}
-                </div>
             </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 {{ settings.turf_name if settings else 'GAME ON BOGURA' }}. All rights reserved.</p>
+            <div class="footer-bottom" style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05); text-align: center;">
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">&copy; 2026 GAME ON. All rights reserved.</p>
             </div>
         </div>
     </footer>

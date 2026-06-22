@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Home - GAME ON BOGURA {% endblock %}
+{% block title %}Home - {{ settings.turf_name if settings else 'GAME ON BOGURA' }}{% endblock %}
 
 {% block content %}
 <section class="hero" id="home-hero">
@@ -17,15 +17,67 @@
     </div>
     <div class="hero-overlay"></div>
     <div class="hero-content" data-aos="fade-up">
-        <h1>Welcome to <span class="nav-brand">GAME ON BOGURA</span></h1>
-        <p class="lead">Experience premium turf booking with instant confirmations.</p>
-        <div class="hero-actions">
-            <a href="{{ url_for('user.booking') }}" class="btn btn-primary btn-large pulse-animation">
-                <i class="fas fa-calendar-check"></i> Book Your Slot
-            </a>
-            <a href="{{ url_for('user.pricing') }}" class="btn btn-secondary btn-large">
-                <i class="fas fa-tags"></i> View Pricing
-            </a>
+        <h1>Welcome TO <span style="color: var(--primary-color);">GAME ON</span></h1>
+        <p class="lead">Premium multi-location turf booking platform with instant confirmation.</p>
+        
+        <!-- Airbnb-Style Quick Search Bar -->
+        <div class="quick-search-bar">
+            <!-- Location Selector -->
+            <div class="search-item">
+                <label>
+                    <i class="fas fa-map-marker-alt"></i> Location
+                </label>
+                <select id="hero-location">
+                    {% for loc in active_locations %}
+                    <option value="{{ loc._id }}">{{ loc.name.replace('GAME ON ', '') }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Sport Selector -->
+            <div class="search-item">
+                <label>
+                    <i class="fas fa-running"></i> Sport
+                </label>
+                <select id="hero-sport">
+                    <option value="football">Football</option>
+                    <option value="badminton">Badminton</option>
+                </select>
+            </div>
+            <!-- Date Selector -->
+            <div class="search-item" style="border-right: none;">
+                <label>
+                    <i class="fas fa-calendar-day"></i> Date
+                </label>
+                <input type="date" id="hero-date" required>
+            </div>
+            <!-- Search Button -->
+            <button onclick="handleHeroSearch()" class="hero-search-btn">
+                Search Slots <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- Network Stats Banner -->
+<section class="stats-banner">
+    <div class="container">
+        <div class="stats-grid-wrapper">
+            <div class="stat-box" data-aos="fade-up" data-aos-delay="100">
+                <div class="stat-number">2+</div>
+                <div class="stat-label">Premium Venues</div>
+            </div>
+            <div class="stat-box" data-aos="fade-up" data-aos-delay="200">
+                <div class="stat-number">500+</div>
+                <div class="stat-label">Matches Played</div>
+            </div>
+            <div class="stat-box" data-aos="fade-up" data-aos-delay="300">
+                <div class="stat-number">5.0 ⭐</div>
+                <div class="stat-label">Player Rating</div>
+            </div>
+            <div class="stat-box" data-aos="fade-up" data-aos-delay="400">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Instant Confirmation</div>
+            </div>
         </div>
     </div>
 </section>
@@ -33,7 +85,6 @@
 <style>
     .hero {
         background: none !important;
-        /* Override default background */
         position: relative;
         overflow: hidden;
     }
@@ -58,7 +109,6 @@
         opacity: 0;
         transition: opacity 1.5s ease-in-out;
         transform: scale(1.1);
-        /* Gentle zoom effect */
         animation: zoomEffect 20s infinite alternate;
     }
 
@@ -76,16 +126,139 @@
         }
     }
 
-    /* Ensure existing overlay works */
     .hero-overlay {
-        background: rgba(10, 10, 42, 0.7);
-        /* Match existing overlay color */
+        background: rgba(10, 10, 42, 0.75);
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
         z-index: -1;
+    }
+
+    /* Hero Search Bar Styles */
+    .quick-search-bar {
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 50px;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 850px;
+        margin: 3rem auto 0;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .search-item {
+        flex: 1;
+        min-width: 150px;
+        text-align: left;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        padding-right: 15px;
+    }
+
+    .search-item label {
+        display: block;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: var(--primary-color);
+        font-weight: 700;
+        margin-bottom: 4px;
+        letter-spacing: 0.5px;
+    }
+
+    .search-item select,
+    .search-item input {
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 500;
+        width: 100%;
+        outline: none;
+        cursor: pointer;
+        padding: 2px 0;
+    }
+
+    .search-item select option {
+        background: #111;
+        color: #fff;
+    }
+
+    .hero-search-btn {
+        background: var(--gradient-main);
+        color: #000;
+        border: none;
+        border-radius: 30px;
+        padding: 12px 28px;
+        font-weight: bold;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .hero-search-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 255, 136, 0.5);
+    }
+
+    /* Stats Banner Styles */
+    .stats-banner {
+        background: linear-gradient(180deg, rgba(5,5,26,0.9) 0%, var(--bg-dark) 100%);
+        padding: 3rem 1rem;
+        border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+        text-align: center;
+    }
+
+    .stats-grid-wrapper {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .stat-box .stat-number {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--primary-color);
+        line-height: 1;
+    }
+
+    .stat-box .stat-label {
+        color: var(--text-secondary);
+        margin-top: 8px;
+        font-weight: 500;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+    }
+
+    @media (max-width: 768px) {
+        .quick-search-bar {
+            border-radius: 20px;
+            padding: 20px;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .search-item {
+            border-right: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-right: 0;
+            padding-bottom: 10px;
+        }
+        .hero-search-btn {
+            justify-content: center;
+        }
     }
 </style>
 
@@ -99,169 +272,122 @@
                 slides[currentSlide].classList.remove('active');
                 currentSlide = (currentSlide + 1) % slides.length;
                 slides[currentSlide].classList.add('active');
-            }, 5000); // Change slide every 5 seconds
+            }, 5000);
         }
     });
 </script>
 
-<section class="featured-carousel-section" data-aos="fade-up">
-    <div class="container-fluid p-0">
-        <div class="swiper featured-swiper">
-            <div class="swiper-wrapper">
-                {% if settings and settings.carousel_images %}
-                {% for image in settings.carousel_images %}
-                <div class="swiper-slide">
-                    <div class="featured-image-container">
-                        <img src="{{ url_for('static', filename='carousel/' + image) }}" alt="Turf Image">
+<!-- Choose Your Turf Section -->
+<section id="choose-turf" class="choose-turf-section" style="padding: 5rem 1rem; background: var(--bg-dark); text-align: center;">
+    <div class="container">
+        <h2 class="section-title" data-aos="fade-up">Choose Your Turf Venue</h2>
+        <p style="color: #ccc; margin-bottom: 3rem; max-width: 600px; margin-left: auto; margin-right: auto;">Select your preferred branch venue to check pricing, slots availability, facilities or book your match instantly.</p>
+        
+        <div class="turf-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; margin-top: 20px;">
+            {% for loc in active_locations %}
+            <div class="turf-card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 15px; overflow: hidden; transition: all 0.3s ease; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+                <div class="turf-image-wrapper" style="height: 200px; width: 100%; overflow: hidden; position: relative;">
+                    <img src="{% if loop.index is odd %}https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800{% else %}https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=800{% endif %}" alt="{{ loc.name }}" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+                    <span style="position: absolute; top: 15px; right: 15px; background: var(--primary-color); color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold; text-transform: uppercase;">
+                        {% if 'KHULNA' in loc.name.upper() %}⭐ New Venue{% else %}🔥 Flagship{% endif %}
+                    </span>
+                </div>
+                <div class="turf-body" style="padding: 25px;">
+                    <h3 style="font-size: 1.4rem; color: #fff; margin-bottom: 12px; font-weight: bold;">{{ loc.name }}</h3>
+                    <p style="color: #ccc; font-size: 0.95em; margin-bottom: 8px;"><i class="fas fa-map-marker-alt" style="color: var(--primary-color); margin-right: 8px; width: 15px;"></i> {{ loc.address }}</p>
+                    <p style="color: #ccc; font-size: 0.95em; margin-bottom: 15px;"><i class="fas fa-phone-alt" style="color: var(--primary-color); margin-right: 8px; width: 15px;"></i> {{ loc.phone }}</p>
+                    
+                    <!-- Pitch Specifications -->
+                    <div style="display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.85em; color: var(--text-secondary);">
+                        {% if 'KHULNA' in loc.name.upper() %}
+                        <span><i class="fas fa-futbol" style="color: var(--primary-color); margin-right: 4px;"></i> 5-a-side Futsal</span>
+                        <span><i class="fas fa-table-tennis" style="color: var(--primary-color); margin-right: 4px;"></i> Badminton</span>
+                        {% else %}
+                        <span><i class="fas fa-futbol" style="color: var(--primary-color); margin-right: 4px;"></i> 5-a-side</span>
+                        <span><i class="fas fa-futbol" style="color: var(--primary-color); margin-right: 4px;"></i> 7-a-side</span>
+                        {% endif %}
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <a href="{{ url_for('user.booking', location=loc._id) }}" class="btn btn-primary" style="flex: 1; text-align: center; font-size: 0.9em; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
+                            <i class="fas fa-calendar-check"></i> Book Now
+                        </a>
+                        <a href="{{ url_for('user.pricing', location=loc._id) }}" class="btn btn-secondary" style="flex: 1; text-align: center; font-size: 0.9em; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; gap: 5px;">
+                            <i class="fas fa-tags"></i> Rates
+                        </a>
                     </div>
                 </div>
-                {% endfor %}
-                {% else %}
-                <!-- Default images if none uploaded -->
-                <div class="swiper-slide">
-                    <div class="featured-image-container">
-                        <img src="https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800" alt="Default 1">
-                    </div>
-                </div>
-                <div class="swiper-slide">
-                    <div class="featured-image-container">
-                        <img src="https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=800" alt="Default 2">
-                    </div>
-                </div>
-                <div class="swiper-slide">
-                    <div class="featured-image-container">
-                        <img src="https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=800" alt="Default 3">
-                    </div>
-                </div>
-                <div class="swiper-slide">
-                    <div class="featured-image-container">
-                        <img src="https://images.unsplash.com/photo-1552667466-07770ae110d0?w=800" alt="Default 4">
-                    </div>
-                </div>
-                {% endif %}
             </div>
-            <div class="swiper-pagination"></div>
-            <div class="swiper-button-next"></div>
-            <div class="swiper-button-prev"></div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Venue Comparison Matrix -->
+<section id="compare-venues" style="padding: 5rem 1rem; background: var(--bg-light); border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center;">
+    <div class="container">
+        <h2 class="section-title" data-aos="fade-up" style="margin-bottom: 1rem;">Venue Battle: Bogura vs Khulna</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 3rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+            Compare specifications and premium features of our flagship venues to pick your play field.
+        </p>
+
+        <div style="max-width: 900px; margin: 0 auto; background: var(--gradient-card); border: 1px solid var(--glass-border); border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.4);" data-aos="fade-up">
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; background: rgba(0, 255, 136, 0.05); padding: 1.5rem; border-bottom: 2px solid var(--primary-color); font-weight: bold; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; color: var(--primary-color); text-align: left;">
+                <div>Feature</div>
+                <div style="text-align: center;">Game ON Bogura</div>
+                <div style="text-align: center;">Game ON Khulna</div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; font-size: 0.95rem; text-align: left;">
+                <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-weight: 600; color: #fff;">Turf Surface Type</div>
+                    <div style="text-align: center; color: var(--text-secondary);">Premium Artificial Grass</div>
+                    <div style="text-align: center; color: var(--text-secondary);">Pro-Weave Monofilament</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.01);">
+                    <div style="font-weight: 600; color: #fff;">Sports Supported</div>
+                    <div style="text-align: center; color: var(--text-secondary);">Football / Futsal</div>
+                    <div style="text-align: center; color: var(--text-secondary);">Football & Badminton</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-weight: 600; color: #fff;">Pitch Formats</div>
+                    <div style="text-align: center; color: var(--text-secondary);">5-a-side / 7-a-side</div>
+                    <div style="text-align: center; color: var(--text-secondary);">5-a-side (Outdoor) & Court (Indoor)</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.01);">
+                    <div style="font-weight: 600; color: #fff;">LED Stadium Lights</div>
+                    <div style="text-align: center; color: var(--primary-color);"><i class="fas fa-check-circle"></i> Yes (1500 Lux)</div>
+                    <div style="text-align: center; color: var(--primary-color);"><i class="fas fa-check-circle"></i> Yes (2000 Lux)</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <div style="font-weight: 600; color: #fff;">Ample Parking</div>
+                    <div style="text-align: center; color: var(--primary-color);"><i class="fas fa-check-circle"></i> Cars & Bikes</div>
+                    <div style="text-align: center; color: var(--primary-color);"><i class="fas fa-check-circle"></i> Dedicated Zone</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; padding: 1.2rem 1.5rem; background: rgba(255,255,255,0.01);">
+                    <div style="font-weight: 600; color: #fff;">Cafeteria & Lounge</div>
+                    <div style="text-align: center; color: var(--primary-color);"><i class="fas fa-check-circle"></i> Match lounge</div>
+                    <div style="text-align: center; color: var(--primary-color);"><i class="fas fa-check-circle"></i> Full Cafe</div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
 <style>
-    .featured-carousel-section {
-        padding: 0;
-        /* Full width overlap if desired, or margin */
-        background: var(--bg-dark);
-        margin-bottom: 2rem;
+    .turf-card:hover {
+        transform: translateY(-8px);
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 15px 35px rgba(0, 255, 136, 0.15) !important;
     }
-
-    .featured-swiper {
-        width: 100%;
-        padding-top: 2rem;
-        padding-bottom: 3rem;
-    }
-
-    .featured-image-container {
-        width: 100%;
-        height: 300px;
-        border-radius: 15px;
-        overflow: hidden;
-        border: 1px solid var(--glass-border);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        transition: transform 0.3s;
-    }
-
-    .swiper-slide {
-        background-position: center;
-        background-size: cover;
-        width: 400px;
-        /* Base width for 'auto' or specific per view */
-        /* Center slides */
-        display: flex;
-        justify-content: center;
-    }
-
-    .swiper-slide img {
-        display: block;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .swiper-slide-active .featured-image-container {
-        transform: scale(1.05);
-        border-color: var(--primary-color);
-        box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
-    }
-
-    .swiper-pagination-bullet {
-        background: var(--text-secondary);
-    }
-
-    .swiper-pagination-bullet-active {
-        background: var(--primary-color);
-    }
-
-    .swiper-button-next,
-    .swiper-button-prev {
-        color: var(--primary-color);
-    }
-
-    @media (max-width: 768px) {
-        .featured-image-container {
-            height: 200px;
-        }
+    .turf-card:hover .turf-image-wrapper img {
+        transform: scale(1.08);
     }
 </style>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var swiper = new Swiper(".featured-swiper", {
-            effect: "coverflow",
-            grabCursor: true,
-            centeredSlides: true,
-            slidesPerView: "auto",
-            loop: true,
-            coverflowEffect: {
-                rotate: 0,
-                stretch: 0,
-                depth: 100,
-                modifier: 2,
-                slideShadows: true,
-            },
-            autoplay: {
-                delay: 2500,
-                disableOnInteraction: false,
-            },
-            pagination: {
-                el: ".swiper-pagination",
-                clickable: true,
-            },
-            navigation: {
-                nextEl: ".swiper-button-next",
-                prevEl: ".swiper-button-prev",
-            },
-            breakpoints: {
-                640: {
-                    slidesPerView: 1,
-                    spaceBetween: 20,
-                },
-                768: {
-                    slidesPerView: 2,
-                    spaceBetween: 40,
-                },
-                1024: {
-                    slidesPerView: 3,
-                    spaceBetween: 50,
-                },
-            },
-        });
-    });
-</script>
-
 <section class="highlights">
     <div class="container">
-        <h2 class="section-title" data-aos="fade-up">Why Play Here?</h2>
+        <h2 class="section-title" data-aos="fade-up">Why Play at Game ON?</h2>
         <div class="highlights-grid">
             <div class="highlight-card" data-aos="fade-up" data-aos-delay="100">
                 <i class="fas fa-lightbulb"></i>
@@ -287,30 +413,6 @@
     </div>
 </section>
 
-<section class="quick-availability" data-aos="zoom-in">
-    <div class="container">
-        <h2 class="section-title">Check Availability</h2>
-        <div class="availability-preview">
-            <div class="sport-selection-container small-cards">
-                <div class="sport-card selected" onclick="selectQuickSport('football', this)">
-                    <div class="sport-icon"><i class="fas fa-futbol"></i></div>
-                    <h3>Football</h3>
-                </div>
-                <div class="sport-card" onclick="selectQuickSport('badminton', this)">
-                    <div class="sport-icon"><i class="fas fa-table-tennis"></i></div>
-                    <h3>Badminton</h3>
-                </div>
-            </div>
-            <div class="form-group">
-                <input type="date" id="quick-date" class="form-control" min="">
-            </div>
-            <button onclick="checkQuickAvailability()" class="btn btn-primary">
-                Search Slots <i class="fas fa-search"></i>
-            </button>
-            <div id="quick-availability-result" class="availability-result"></div>
-        </div>
-    </div>
-</section>
 
 {% if testimonials %}
 <section class="testimonials">
@@ -337,11 +439,24 @@
 
 <section class="location" data-aos="fade-up">
     <div class="container">
-        <h2 class="section-title">Location</h2>
+        <h2 class="section-title" style="margin-bottom: 1.5rem;">Find Us on Google Maps</h2>
+        
+        <!-- Location Tabs -->
+        <div class="map-tabs" style="display: flex; justify-content: center; gap: 10px; margin-bottom: 2rem;">
+            <button onclick="switchMap('bogura', this)" class="btn btn-primary map-tab-btn" style="padding: 8px 20px; font-weight: bold; border-radius: 20px;">Bogura Branch</button>
+            <button onclick="switchMap('khulna', this)" class="btn btn-secondary map-tab-btn" style="padding: 8px 20px; font-weight: bold; border-radius: 20px;">Khulna Branch</button>
+        </div>
+
         <div class="map-container glass-map">
-            <iframe
+            <!-- Bogura Map -->
+            <iframe id="map-bogura"
                 src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d452.6320298168447!2d89.3657475!3d24.8277503!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39fc55006b6c9c99%3A0xed4fc12bada09a6!2sGame%20ON%20Bogura!5e0!3m2!1sen!2sbd!4v1765229343848!5m2!1sen!2sbd"
-                width="100%" height="400" style="border:0;" allowfullscreen="" loading="lazy">
+                width="100%" height="400" style="border:0; display: block;" allowfullscreen="" loading="lazy">
+            </iframe>
+            <!-- Khulna Map -->
+            <iframe id="map-khulna"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3677.3712396113645!2d89.5444855!3d22.8256336!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39ff907085ef7c07%3A0xd64d9b4bcfb4661b!2sKhulna%20Sadar%2C%20Khulna!5e0!3m2!1sen!2sbd!4v1765229343849!5m2!1sen!2sbd"
+                width="100%" height="400" style="border:0; display: none;" allowfullscreen="" loading="lazy">
             </iframe>
         </div>
     </div>
@@ -350,55 +465,58 @@
 
 {% block extra_js %}
 <script>
-    let selectedQuickSport = 'football';
-
-    function selectQuickSport(sport, element) {
-        selectedQuickSport = sport;
-        document.querySelectorAll('.small-cards .sport-card').forEach(c => c.classList.remove('selected'));
-        element.classList.add('selected');
+    // Set minimum dates to today
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (document.getElementById('hero-date')) {
+        document.getElementById('hero-date').min = todayStr;
+        document.getElementById('hero-date').value = todayStr; // default to today
     }
 
-    function checkQuickAvailability() {
-        const date = document.getElementById('quick-date').value;
+    document.addEventListener('DOMContentLoaded', function() {
+        const heroLocation = document.getElementById('hero-location');
+        if (heroLocation) {
+            heroLocation.addEventListener('change', function() {
+                const heroSport = document.getElementById('hero-sport');
+                const selectedText = this.options[this.selectedIndex].text.toUpperCase();
+                if (selectedText.includes('BOGURA') && heroSport) {
+                    heroSport.value = 'football';
+                    if (heroSport.options[1]) heroSport.options[1].disabled = true;
+                } else if (heroSport) {
+                    if (heroSport.options[1]) heroSport.options[1].disabled = false;
+                }
+            });
+            // Initial run for hero selector
+            const selectedText = heroLocation.options[heroLocation.selectedIndex].text.toUpperCase();
+            const heroSport = document.getElementById('hero-sport');
+            if (selectedText.includes('BOGURA') && heroSport) {
+                if (heroSport.options[1]) heroSport.options[1].disabled = true;
+            }
+        }
+    });
+
+    function handleHeroSearch() {
+        const locId = document.getElementById('hero-location').value;
+        const sport = document.getElementById('hero-sport').value;
+        const date = document.getElementById('hero-date').value;
+        
         if (!date) {
-            alert('Please select a date');
+            alert('Please select a date first!');
             return;
         }
-
-        fetch(`/api/availability/${date}?sport=${selectedQuickSport}`)
-            .then(res => res.json())
-            .then(data => {
-                const resultDiv = document.getElementById('quick-availability-result');
-                if (data.length === 0) {
-                    resultDiv.innerHTML = '<p class="text-center">No slots found for this date.</p>';
-                    return;
-                }
-
-                resultDiv.innerHTML = `
-                <h3 class="text-center" style="margin: 1rem 0; color: var(--primary-color);">
-                    ${date} (${selectedQuickSport.charAt(0).toUpperCase() + selectedQuickSport.slice(1)})
-                </h3>
-                <div class="slots-grid">
-                    ${data.map(slot => `
-                        <div class="slot-card ${slot.available ? 'available' : 'booked'}">
-                            <div class="slot-time">${slot.time}</div>
-                            <div class="slot-price">৳${slot.price}</div>
-                            <div class="slot-status">${slot.available ? 'Available' : 'Booked'}</div>
-                        </div>
-                    `).join('')}
-                </div>
-                <div class="text-center" style="margin-top: 1.5rem;">
-                    <a href="/booking" class="btn btn-primary pulse-animation">Book Now</a>
-                </div>
-                `;
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Error checking availability');
-            });
+        
+        window.location.href = `/availability?location=${encodeURIComponent(locId)}&sport=${encodeURIComponent(sport)}&date=${encodeURIComponent(date)}`;
     }
 
-    // Set minimum date to tomorrow
-    document.getElementById('quick-date').min = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    function switchMap(branch, btnElement) {
+        document.getElementById('map-bogura').style.display = branch === 'bogura' ? 'block' : 'none';
+        document.getElementById('map-khulna').style.display = branch === 'khulna' ? 'block' : 'none';
+        
+        document.querySelectorAll('.map-tab-btn').forEach(btn => {
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-secondary');
+        });
+        btnElement.classList.remove('btn-secondary');
+        btnElement.classList.add('btn-primary');
+    }
 </script>
 {% endblock %}

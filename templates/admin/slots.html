@@ -3,10 +3,19 @@
 {% block page_title %}Time Slots Management{% endblock %}
 
 {% block content %}
-<div class="admin-actions">
+<div class="admin-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <button onclick="showCreateSlotModal()" class="btn btn-primary">
         <i class="fas fa-plus"></i> Add New Slot
     </button>
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <label for="filter-location-select" style="font-weight: bold; color: var(--primary-color);"><i class="fas fa-filter"></i> Filter by Location:</label>
+        <select id="filter-location-select" class="form-control" onchange="filterSlotsByLocation(this.value)" style="width: auto; min-width: 250px;">
+            <option value="all">All Locations</option>
+            {% for loc in locations %}
+            <option value="{{ loc._id }}">{{ loc.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
 </div>
 
 <div class="slots-container">
@@ -16,6 +25,7 @@
             <table class="admin-table">
                 <thead>
                     <tr>
+                        <th>Location</th>
                         <th>Time Slot</th>
                         <th>Price (BDT)</th>
                         <th>Rate Type</th>
@@ -25,7 +35,14 @@
                 </thead>
                 <tbody>
                     {% for slot in football_slots %}
-                    <tr>
+                    <tr class="slot-row" data-location-id="{{ slot.location_id }}">
+                        <td style="font-weight: bold; color: var(--primary-color);">
+                            {% for loc in locations %}
+                                {% if loc._id|string == slot.location_id|string %}
+                                    {{ loc.name }}
+                                {% endif %}
+                            {% endfor %}
+                        </td>
                         <td>{{ slot.time }}</td>
                         <td>
                             {% if slot.discount_active %}
@@ -50,7 +67,7 @@
                         </td>
                         <td>
                             <button
-                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'football', '{{ slot.rate_type|default('weekday') }}')"
+                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'football', '{{ slot.rate_type|default('weekday') }}', '{{ slot.location_id }}')"
                                 class="btn btn-sm btn-primary">Edit</button>
                         </td>
                     </tr>
@@ -66,6 +83,7 @@
             <table class="admin-table">
                 <thead>
                     <tr>
+                        <th>Location</th>
                         <th>Time Slot</th>
                         <th>Price (BDT)</th>
                         <th>Rate Type</th>
@@ -75,7 +93,14 @@
                 </thead>
                 <tbody>
                     {% for slot in badminton_slots %}
-                    <tr>
+                    <tr class="slot-row" data-location-id="{{ slot.location_id }}">
+                        <td style="font-weight: bold; color: var(--primary-color);">
+                            {% for loc in locations %}
+                                {% if loc._id|string == slot.location_id|string %}
+                                    {{ loc.name }}
+                                {% endif %}
+                            {% endfor %}
+                        </td>
                         <td>{{ slot.time }}</td>
                         <td>
                             {% if slot.discount_active %}
@@ -100,7 +125,7 @@
                         </td>
                         <td>
                             <button
-                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'badminton', '{{ slot.rate_type|default('weekday') }}')"
+                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'badminton', '{{ slot.rate_type|default('weekday') }}', '{{ slot.location_id }}')"
                                 class="btn btn-sm btn-primary">Edit</button>
                         </td>
                     </tr>
@@ -118,6 +143,14 @@
         <h2 id="modal-title">Add New Slot</h2>
         <form id="slotForm">
             <input type="hidden" id="slot-id">
+            <div class="form-group">
+                <label for="slot-location">Turf Location *</label>
+                <select id="slot-location" class="form-control" required>
+                    {% for loc in locations %}
+                    <option value="{{ loc._id }}">{{ loc.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
             <div class="form-group">
                 <label for="slot-sport">Sport *</label>
                 <select id="slot-sport" class="form-control" required>
@@ -171,10 +204,24 @@
 <script>
     let editingSlotId = null;
 
+    function filterSlotsByLocation(locId) {
+        const rows = document.querySelectorAll('.slot-row');
+        rows.forEach(row => {
+            if (locId === 'all' || row.getAttribute('data-location-id') === locId) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
     function showCreateSlotModal() {
         editingSlotId = null;
         document.getElementById('modal-title').textContent = 'Add New Slot';
         document.getElementById('slot-id').value = '';
+        if(document.getElementById('slot-location').options.length > 0) {
+            document.getElementById('slot-location').selectedIndex = 0;
+        }
         document.getElementById('slot-sport').value = 'football';
         document.getElementById('slot-rate-type').value = 'weekday';
         document.getElementById('slot-time').value = '';
@@ -185,10 +232,13 @@
         document.getElementById('slotModal').style.display = 'block';
     }
 
-    function editSlot(slotId, time, price, enabled, discountActive, discountPercent, sport, rateType) {
+    function editSlot(slotId, time, price, enabled, discountActive, discountPercent, sport, rateType, locationId) {
         editingSlotId = slotId;
         document.getElementById('modal-title').textContent = 'Edit Slot';
         document.getElementById('slot-id').value = slotId;
+        if(locationId && document.getElementById('slot-location')) {
+            document.getElementById('slot-location').value = locationId;
+        }
         document.getElementById('slot-sport').value = sport || 'football';
         document.getElementById('slot-rate-type').value = rateType || 'weekday';
         document.getElementById('slot-time').value = time;
@@ -207,6 +257,7 @@
         e.preventDefault();
 
         const data = {
+            location_id: document.getElementById('slot-location').value,
             sport: document.getElementById('slot-sport').value,
             rate_type: document.getElementById('slot-rate-type').value,
             time: document.getElementById('slot-time').value,

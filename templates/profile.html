@@ -3,16 +3,30 @@
 {% block title %}Profile - GAME ON BOGURA{% endblock %}
 
 {% block content %}
-<div class="container" style="padding:2rem 1rem; max-width:1000px;">
-    <h1 style="margin-bottom:1rem;">My Profile</h1>
+<div class="container" style="padding: 3rem 1.5rem; max-width: 1000px;">
+    <h1 style="margin-bottom: 2rem; font-weight: 700;">My Profile</h1>
 
-    <div class="card" style="padding:1rem; margin-bottom:1.5rem;">
-        <h3>Account Details</h3>
-        <p><strong>Name:</strong> {{ (user.first_name ~ ' ' ~ user.last_name) if user else '' }}</p>
-        <p><strong>Email:</strong> {{ user.email if user else '' }}</p>
-        <p><strong>Phone:</strong> {{ user.phone if user else '' }}</p>
-        <p><strong>User ID:</strong> {{ user.user_id if user else '' }}</p>
-        <button onclick="openEditModal()" class="btn btn-primary btn-sm" style="margin-top:1rem;">
+    <div class="card" style="padding: 2rem; margin-bottom: 2.5rem; border-radius: 16px;">
+        <h3 style="margin-bottom: 1.5rem; color: var(--primary-color);">Account Details</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+            <div>
+                <strong style="color: var(--text-secondary); display: block; font-size: 0.85rem; text-transform: uppercase;">Name</strong>
+                <span style="font-size: 1.1rem; font-weight: 500;">{{ (user.first_name ~ ' ' ~ user.last_name) if user else '' }}</span>
+            </div>
+            <div>
+                <strong style="color: var(--text-secondary); display: block; font-size: 0.85rem; text-transform: uppercase;">Email</strong>
+                <span style="font-size: 1.1rem; font-weight: 500;">{{ user.email if user else '' }}</span>
+            </div>
+            <div>
+                <strong style="color: var(--text-secondary); display: block; font-size: 0.85rem; text-transform: uppercase;">Phone</strong>
+                <span style="font-size: 1.1rem; font-weight: 500;">{{ user.phone if user else '' }}</span>
+            </div>
+            <div>
+                <strong style="color: var(--text-secondary); display: block; font-size: 0.85rem; text-transform: uppercase;">User ID</strong>
+                <span style="font-size: 1.1rem; font-weight: 500;">{{ user.user_id if user else '' }}</span>
+            </div>
+        </div>
+        <button onclick="openEditModal()" class="btn btn-primary btn-sm" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.2rem;">
             <i class="fas fa-edit"></i> Edit Profile
         </button>
     </div>
@@ -43,23 +57,19 @@
         </div>
     </div>
 
-    <div class="card" style="padding:1rem;">
-        <h3 style="margin-bottom:1rem;">Your Bookings</h3>
+    <div class="card" style="padding: 2rem; border-radius: 16px;">
+        <h3 style="margin-bottom: 1.5rem; color: var(--primary-color);">Your Bookings</h3>
         {% if bookings %}
         <div class="table-responsive">
             <table class="table">
                 <thead>
                     <tr>
                         <th>Booking ID</th>
-
                         <th>Date</th>
-
+                        <th>Location</th>
                         <th>Time Slot</th>
-
                         <th>Status</th>
-
                         <th>Amount</th>
-
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -68,20 +78,35 @@
                     <tr>
                         <td>{% if b.booking_id %}{{ b.booking_id }}{% else %}#{{ b._id }}{% endif %}</td>
                         <td>{{ b.date }}</td>
+                        <td style="font-weight: 600; color: var(--primary-color);">{{ b.location_name }}</td>
                         <td>{{ b.slot_time }}</td>
-                        <td>{{ b.status_display|capitalize }}</td>
-                        <td>৳{{ b.amount }}</td>
+                        <td>
+                            <span class="status-badge" style="
+                                padding: 0.3rem 0.8rem;
+                                border-radius: 20px;
+                                font-size: 0.85rem;
+                                font-weight: 600;
+                                background: {% if b.status == 'paid' %}rgba(0, 255, 136, 0.1){% elif b.status == 'pending' %}rgba(243, 156, 18, 0.1){% else %}rgba(255, 255, 255, 0.05){% endif %};
+                                color: {% if b.status == 'paid' %}var(--primary-color){% elif b.status == 'pending' %}#f39c12{% else %}var(--text-secondary){% endif %};
+                                border: 1px solid {% if b.status == 'paid' %}rgba(0, 255, 136, 0.2){% elif b.status == 'pending' %}rgba(243, 156, 18, 0.2){% else %}rgba(255, 255, 255, 0.1){% endif %};
+                            ">
+                                {{ b.status_display|capitalize if b.status_display else b.status|capitalize }}
+                            </span>
+                        </td>
+                        <td style="font-weight: 600;">৳{{ b.amount }}</td>
                         <td>
                             {% if b.status == 'cancelled' %}
-                            <span class="btn btn-secondary" disabled>Cancelled</span>
+                            <span style="color: var(--text-secondary); font-size: 0.9rem; font-style: italic;">Cancelled</span>
                             {% elif b.can_cancel %}
                             <form method="post" action="{{ url_for('user.cancel_booking', booking_id=b._id) }}"
                                 style="display:inline;">
-                                <button class="btn btn-danger" type="submit">Cancel</button>
+                                <button class="btn btn-danger btn-sm" type="submit" onclick="return confirm('Are you sure you want to cancel this booking?');">Cancel</button>
                             </form>
                             {% else %}
-                            <button class="btn btn-secondary" type="button" disabled
-                                title="Please call to cancel if less than 48h remains">Contact Authority</button>
+                            <a href="https://wa.me/{{ settings.whatsapp.replace('+', '').replace(' ', '').replace('-', '') }}?text={{ ('Hi, I would like to inquire about my booking ' ~ (b.booking_id if b.booking_id else '#' ~ b._id) ~ ' on ' ~ b.date ~ ' (' ~ b.slot_time ~ ') at ' ~ b.location_name)|urlencode }}" 
+                               class="btn btn-secondary btn-sm" target="_blank" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                                <i class="fab fa-whatsapp"></i> Contact Authority
+                            </a>
                             {% endif %}
                         </td>
                     </tr>
@@ -90,7 +115,7 @@
             </table>
         </div>
         {% else %}
-        <p>You have no bookings yet.</p>
+        <p style="color: var(--text-secondary);">You have no bookings yet.</p>
         {% endif %}
     </div>
 </div>
