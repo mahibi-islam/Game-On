@@ -1,0 +1,59 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Create Location - Admin Panel{% endblock %}
+{% block page_title %}Add New Location{% endblock %}
+
+{% block content %}
+<div class="admin-form-container">
+    <h2>Add New Turf Location</h2>
+    <form method="POST" class="admin-form">
+        <div class="form-group">
+            <label for="name">Location Name *</label>
+            <input type="text" id="name" name="name" class="form-control" placeholder="e.g. GAME ON BOGURA - Cantonment" required>
+        </div>
+
+        <div class="form-group">
+            <label for="address">Address *</label>
+            <textarea id="address" name="address" class="form-control" rows="2" placeholder="Full address details" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="phone">Phone *</label>
+            <input type="tel" id="phone" name="phone" class="form-control" placeholder="+880..." required>
+        </div>
+
+        <div class="form-group">
+            <label for="whatsapp">WhatsApp Number *</label>
+            <input type="tel" id="whatsapp" name="whatsapp" class="form-control" placeholder="+880..." required>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" class="form-control" placeholder="contact@domain.com">
+        </div>
+
+        <div class="form-group">
+            <label for="rules">Rules & Regulations</label>
+            <textarea id="rules" name="rules" class="form-control" rows="4" placeholder="Turf rules separated by newlines"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="homepage_content">Welcome Content / Description</label>
+            <textarea id="homepage_content" name="homepage_content" class="form-control" rows="3" placeholder="Welcome message for this location"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="enabled">Status</label>
+            <select id="enabled" name="enabled" class="form-control">
+                <option value="true" selected>Active / Enabled</option>
+                <option value="false">Inactive / Disabled</option>
+            </select>
+        </div>
+
+        <div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+            <button type="submit" class="admin-btn admin-btn-success" style="padding: 10px 20px;">Save Location</button>
+            <a href="{{ url_for('admin.locations') }}" class="admin-btn admin-btn-info" style="text-decoration: none; padding: 10px 20px;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
