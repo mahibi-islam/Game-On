@@ -469,18 +469,37 @@ def upload_gallery():
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
     
-    filename = secure_filename(file.filename)
-    filepath = os.path.join('static/gallery', filename)
-    file.save(filepath)
-    
-    mongo.db.gallery.insert_one({
-        'filename': filename,
-        'path': f'gallery/{filename}',
-        'type': file_type,
-        'uploaded_at': get_bangladesh_now()
-    })
-    
-    return jsonify({'success': True, 'filename': filename})
+    if os.environ.get('CLOUDINARY_URL'):
+        import cloudinary
+        import cloudinary.uploader
+        try:
+            # Let Cloudinary auto-detect type (image or video)
+            res = cloudinary.uploader.upload(file, folder="gallery", resource_type="auto")
+            url = res.get('secure_url')
+            public_id = res.get('public_id')
+            
+            mongo.db.gallery.insert_one({
+                'filename': file.filename,
+                'path': url,
+                'cloudinary_public_id': public_id,
+                'type': file_type,
+                'uploaded_at': get_bangladesh_now()
+            })
+            return jsonify({'success': True, 'filename': file.filename})
+        except Exception as e:
+            return jsonify({'error': f'Cloudinary upload error: {str(e)}'}), 500
+    else:
+        filename = secure_filename(file.filename)
+        filepath = os.path.join('static/gallery', filename)
+        file.save(filepath)
+        
+        mongo.db.gallery.insert_one({
+            'filename': filename,
+            'path': f'gallery/{filename}',
+            'type': file_type,
+            'uploaded_at': get_bangladesh_now()
+        })
+        return jsonify({'success': True, 'filename': filename})
 
 @admin_bp.route('/gallery/delete/<gallery_id>', methods=['POST'])
 @admin_required
@@ -488,9 +507,18 @@ def delete_gallery_item(gallery_id):
     """Delete gallery item"""
     item = mongo.db.gallery.find_one({'_id': ObjectId(gallery_id)})
     if item:
-        filepath = os.path.join('static', item['path'])
-        if os.path.exists(filepath):
-            os.remove(filepath)
+        if item.get('cloudinary_public_id'):
+            import cloudinary
+            import cloudinary.uploader
+            try:
+                # Delete from Cloudinary
+                cloudinary.uploader.destroy(item['cloudinary_public_id'], resource_type=item.get('type', 'image'))
+            except Exception as e:
+                print(f"Error deleting from Cloudinary: {e}")
+        else:
+            filepath = os.path.join('static', item['path'])
+            if os.path.exists(filepath):
+                os.remove(filepath)
         mongo.db.gallery.delete_one({'_id': ObjectId(gallery_id)})
     return jsonify({'success': True})
 
@@ -540,25 +568,66 @@ def upload_carousel_image():
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
     
-    filename = secure_filename(f"{int(get_bangladesh_now().timestamp())}_{file.filename}")
-    filepath = os.path.join('static/carousel', filename)
-    file.save(filepath)
-    
-    # Update settings
-    settings = Settings.find_one()
-    images = settings.get('carousel_images', []) if settings else []
-    images.append(filename)
-    Settings.update({'carousel_images': images})
-    
-    return jsonify({'success': True, 'filename': filename})
+    if os.environ.get('CLOUDINARY_URL'):
+        import cloudinary
+        import cloudinary.uploader
+        try:
+            res = cloudinary.uploader.upload(file, folder="carousel")
+            url = res.get('secure_url')
+            
+            # Update settings
+            settings = Settings.find_one()
+            images = settings.get('carousel_images', []) if settings else []
+            images.append(url)
+            Settings.update({'carousel_images': images})
+            
+            return jsonify({'success': True, 'filename': url})
+        except Exception as e:
+            return jsonify({'error': f'Cloudinary upload error: {str(e)}'}), 500
+    else:
+        filename = secure_filename(f"{int(get_bangladesh_now().timestamp())}_{file.filename}")
+        filepath = os.path.join('static/carousel', filename)
+        file.save(filepath)
+        
+        # Update settings
+        settings = Settings.find_one()
+        images = settings.get('carousel_images', []) if settings else []
+        images.append(filename)
+        Settings.update({'carousel_images': images})
+        
+        return jsonify({'success': True, 'filename': filename})
 
-@admin_bp.route('/settings/carousel/delete/<filename>', methods=['POST'])
+@admin_bp.route('/settings/carousel/delete/<path:filename>', methods=['POST'])
 @admin_required
 def delete_carousel_image(filename):
     """Delete carousel image"""
-    filepath = os.path.join('static/carousel', secure_filename(filename))
-    if os.path.exists(filepath):
-        os.remove(filepath)
+    if filename.startswith('http://') or filename.startswith('https://'):
+        import cloudinary
+        import cloudinary.uploader
+        try:
+            # Parse public id from Cloudinary URL
+            if 'image/upload/' in filename:
+                parts = filename.split('image/upload/')[-1].split('/')
+                if parts[0].startswith('v') and parts[0][1:].isdigit():
+                    public_id_with_ext = '/'.join(parts[1:])
+                else:
+                    public_id_with_ext = '/'.join(parts)
+                public_id = public_id_with_ext.rsplit('.', 1)[0]
+                cloudinary.uploader.destroy(public_id)
+            elif 'video/upload/' in filename:
+                parts = filename.split('video/upload/')[-1].split('/')
+                if parts[0].startswith('v') and parts[0][1:].isdigit():
+                    public_id_with_ext = '/'.join(parts[1:])
+                else:
+                    public_id_with_ext = '/'.join(parts)
+                public_id = public_id_with_ext.rsplit('.', 1)[0]
+                cloudinary.uploader.destroy(public_id, resource_type="video")
+        except Exception as e:
+            print(f"Error deleting carousel image from Cloudinary: {e}")
+    else:
+        filepath = os.path.join('static/carousel', secure_filename(filename))
+        if os.path.exists(filepath):
+            os.remove(filepath)
     
     # Update settings
     settings = Settings.find_one()

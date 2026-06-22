@@ -12,7 +12,8 @@
         <div class="gallery-grid">
             {% for image in images %}
             <div class="gallery-item">
-                <img src="{{ url_for('static', filename=image.path) }}" alt="Gallery Image" onclick="openLightbox('{{ url_for('static', filename=image.path) }}')">
+                {% set img_url = image.path if image.path.startswith('http') else url_for('static', filename=image.path) %}
+                <img src="{{ img_url }}" alt="Gallery Image" onclick="openLightbox('{{ img_url }}')">
             </div>
             {% endfor %}
         </div>
@@ -26,7 +27,8 @@
             {% for video in videos %}
             <div class="video-item">
                 <video controls>
-                    <source src="{{ url_for('static', filename=video.path) }}" type="video/mp4">
+                    {% set vid_url = video.path if video.path.startswith('http') else url_for('static', filename=video.path) %}
+                    <source src="{{ vid_url }}" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
             </div>

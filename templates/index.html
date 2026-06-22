@@ -7,8 +7,9 @@
     <div class="hero-slides">
         {% if settings and settings.carousel_images %}
         {% for image in settings.carousel_images %}
+        {% set img_url = image if image.startswith('http') else url_for('static', filename='carousel/' + image) %}
         <div class="hero-slide {% if loop.first %}active{% endif %}"
-            style="background-image: url('{{ url_for('static', filename='carousel/' + image) }}');"></div>
+            style="background-image: url('{{ img_url }}');"></div>
         {% endfor %}
         {% else %}
         <div class="hero-slide active"

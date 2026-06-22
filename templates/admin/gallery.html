@@ -14,7 +14,8 @@
     <div class="admin-gallery-grid">
         {% for image in images %}
         <div class="admin-gallery-item">
-            <img src="{{ url_for('static', filename=image.path) }}" alt="Gallery Image">
+            {% set img_url = image.path if image.path.startswith('http') else url_for('static', filename=image.path) %}
+            <img src="{{ img_url }}" alt="Gallery Image">
             <div class="gallery-item-actions">
                 <button onclick="deleteGalleryItem('{{ image._id }}')" class="btn btn-sm btn-danger">
                     <i class="fas fa-trash"></i> Delete
@@ -31,7 +32,8 @@
         {% for video in videos %}
         <div class="admin-gallery-item">
             <video controls>
-                <source src="{{ url_for('static', filename=video.path) }}" type="video/mp4">
+                {% set vid_url = video.path if video.path.startswith('http') else url_for('static', filename=video.path) %}
+                <source src="{{ vid_url }}" type="video/mp4">
             </video>
             <div class="gallery-item-actions">
                 <button onclick="deleteGalleryItem('{{ video._id }}')" class="btn btn-sm btn-danger">

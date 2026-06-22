@@ -65,7 +65,8 @@
                     {% if settings and settings.carousel_images %}
                     {% for image in settings.carousel_images %}
                     <div class="carousel-item-admin">
-                        <img src="{{ url_for('static', filename='carousel/' + image) }}" alt="Carousel Image">
+                        {% set img_url = image if image.startswith('http') else url_for('static', filename='carousel/' + image) %}
+                        <img src="{{ img_url }}" alt="Carousel Image">
                         <button type="button" class="btn-delete" onclick="deleteCarouselImage('{{ image }}', this)">
                             <i class="fas fa-trash"></i>
                         </button>
