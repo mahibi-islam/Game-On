@@ -36,7 +36,7 @@
     <!-- Step 1: Location Selection -->
     <div class="booking-step-content" id="step-1">
         <h2>Select Turf Location</h2>
-        <div class="location-selection-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+        <div class="location-selection-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 20px;">
             {% for loc in active_locations %}
             <div class="location-card" onclick="selectLocation('{{ loc._id }}', '{{ loc.name }}')" style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 25px; cursor: pointer; transition: all 0.3s ease; text-align: left; position: relative; overflow: hidden;">
                 <div style="font-size: 2rem; color: var(--primary-color); margin-bottom: 15px;"><i class="fas fa-map-marker-alt"></i></div>

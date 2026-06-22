@@ -284,7 +284,7 @@
         <h2 class="section-title" data-aos="fade-up">Choose Your Turf Venue</h2>
         <p style="color: #ccc; margin-bottom: 3rem; max-width: 600px; margin-left: auto; margin-right: auto;">Select your preferred branch venue to check pricing, slots availability, facilities or book your match instantly.</p>
         
-        <div class="turf-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; margin-top: 20px;">
+        <div class="turf-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-top: 20px;">
             {% for loc in active_locations %}
             <div class="turf-card" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 15px; overflow: hidden; transition: all 0.3s ease; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
                 <div class="turf-image-wrapper" style="height: 200px; width: 100%; overflow: hidden; position: relative;">
@@ -324,56 +324,7 @@
     </div>
 </section>
 
-<!-- Venue Comparison Matrix -->
-<section id="compare-venues" style="padding: 5rem 1rem; background: var(--bg-light); border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center;">
-    <div class="container">
-        <h2 class="section-title" data-aos="fade-up" style="margin-bottom: 1rem;">Venue Battle: Bogura vs Khulna</h2>
-        <p style="color: var(--text-secondary); margin-bottom: 3rem; max-width: 600px; margin-left: auto; margin-right: auto;">
-            Compare specifications and premium features of our flagship venues to pick your play field.
-        </p>
 
-        <div style="max-width: 900px; margin: 0 auto; background: var(--gradient-card); border: 1px solid var(--glass-border); border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.4);" data-aos="fade-up">
-            <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; background: rgba(0, 255, 136, 0.05); padding: 1.5rem; border-bottom: 2px solid var(--primary-color); font-weight: bold; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; color: var(--primary-color); text-align: left;">
-                <div>Feature</div>
-                <div style="text-align: center;">Game ON Bogura</div>
-                <div style="text-align: center;">Game ON Khulna</div>
-            </div>
-            
-            <div style="display: flex; flex-direction: column; font-size: 0.95rem; text-align: left;">
-                <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <div style="font-weight: 600; color: #fff;">Turf Surface Type</div>
-                    <div style="text-align: center; color: var(--text-secondary);">Premium Artificial Grass</div>
-                    <div style="text-align: center; color: var(--text-secondary);">Pro-Weave Monofilament</div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.01);">
-                    <div style="font-weight: 600; color: #fff;">Sports Supported</div>
-                    <div style="text-align: center; color: var(--text-secondary);">Football / Futsal</div>
-                    <div style="text-align: center; color: var(--text-secondary);">Football & Badminton</div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <div style="font-weight: 600; color: #fff;">Pitch Formats</div>
-                    <div style="text-align: center; color: var(--text-secondary);">5-a-side / 7-a-side</div>
-                    <div style="text-align: center; color: var(--text-secondary);">5-a-side (Outdoor) & Court (Indoor)</div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.01);">
-                    <div style="font-weight: 600; color: #fff;">LED Stadium Lights</div>
-                    <div style="text-align: center; color: var(--primary-color);"><i class="fas fa-check-circle"></i> Yes (1500 Lux)</div>
-                    <div style="text-align: center; color: var(--primary-color);"><i class="fas fa-check-circle"></i> Yes (2000 Lux)</div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; padding: 1.2rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <div style="font-weight: 600; color: #fff;">Ample Parking</div>
-                    <div style="text-align: center; color: var(--primary-color);"><i class="fas fa-check-circle"></i> Cars & Bikes</div>
-                    <div style="text-align: center; color: var(--primary-color);"><i class="fas fa-check-circle"></i> Dedicated Zone</div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; padding: 1.2rem 1.5rem; background: rgba(255,255,255,0.01);">
-                    <div style="font-weight: 600; color: #fff;">Cafeteria & Lounge</div>
-                    <div style="text-align: center; color: var(--primary-color);"><i class="fas fa-check-circle"></i> Match lounge</div>
-                    <div style="text-align: center; color: var(--primary-color);"><i class="fas fa-check-circle"></i> Full Cafe</div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
 <style>
     .turf-card:hover {

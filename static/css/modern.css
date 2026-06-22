@@ -217,12 +217,40 @@ body {
     }
 
     .booking-steps {
-        flex-direction: column;
-        gap: 1.5rem;
+        flex-direction: row !important;
+        justify-content: space-between;
+        gap: 0.25rem;
+        margin: 1.5rem 0;
     }
 
     .booking-steps::before {
-        display: none;
+        display: block !important;
+        top: 15px !important;
+        background: rgba(255, 255, 255, 0.1);
+        height: 2px;
+    }
+
+    .step {
+        padding: 0 0.1rem !important;
+        flex: 1;
+        background: transparent !important;
+    }
+
+    .step-number {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 0.85rem !important;
+        line-height: 30px;
+    }
+
+    .step-label {
+        font-size: 0.65rem !important;
+        margin-top: 0.25rem;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 55px;
     }
 
     .contact-container {
