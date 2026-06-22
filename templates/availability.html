@@ -170,7 +170,7 @@
                         <div class="sport-icon"><i class="fas fa-futbol"></i></div>
                         <h3>Football</h3>
                     </div>
-                    <div class="sport-card" onclick="selectSport('badminton', this)">
+                    <div class="sport-card" id="badminton-card" onclick="selectSport('badminton', this)">
                         <div class="sport-icon"><i class="fas fa-table-tennis"></i></div>
                         <h3>Badminton</h3>
                     </div>
@@ -282,6 +282,26 @@
     function loadAvailability() {
         const date = document.getElementById('availability-date').value;
         const locId = document.getElementById('location-select').value;
+
+        // Hide/show badminton based on location name
+        const locSelect = document.getElementById('location-select');
+        if (locSelect && locSelect.selectedIndex !== -1) {
+            const selectedText = locSelect.options[locSelect.selectedIndex].text.toUpperCase();
+            const badmintonCard = document.getElementById('badminton-card');
+            if (badmintonCard) {
+                if (selectedText.includes('KHULNA')) {
+                    badmintonCard.style.display = 'none';
+                    if (selectedSport === 'badminton') {
+                        // Switch to football
+                        selectSport('football', document.querySelector('.sport-card[onclick*="football"]'));
+                        return;
+                    }
+                } else {
+                    badmintonCard.style.display = 'block';
+                }
+            }
+        }
+
         if (!date) {
             alert('Please select a date');
             return;

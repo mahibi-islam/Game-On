@@ -65,7 +65,7 @@
                 <h3>Football Turf</h3>
                 <p>5-a-side / 7-a-side</p>
             </div>
-            <div class="sport-card" onclick="selectSport('badminton')">
+            <div class="sport-card" id="badminton-card" onclick="selectSport('badminton')">
                 <div class="sport-icon"><i class="fas fa-table-tennis"></i></div>
                 <h3>Badminton Court</h3>
                 <p>Indoor Court</p>
@@ -272,6 +272,16 @@
         const target = cardElement || (window.event ? window.event.currentTarget : null);
         if (target) {
             target.classList.add('selected');
+        }
+
+        // Hide/show Badminton based on location
+        const badmintonCard = document.getElementById('badminton-card');
+        if (badmintonCard) {
+            if (locName.toUpperCase().includes('KHULNA')) {
+                badmintonCard.style.display = 'none';
+            } else {
+                badmintonCard.style.display = 'block';
+            }
         }
 
         setTimeout(() => {

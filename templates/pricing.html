@@ -187,7 +187,7 @@
         </div>
     </div>
 
-    <div class="pricing-section spacer">
+    <div class="pricing-section spacer" id="badminton-pricing-section">
         <h2 class="section-title"><i class="fas fa-table-tennis"></i> Badminton Court Pricing</h2>
 
         <div id="badminton-weekday" class="rate-container active">
@@ -309,6 +309,20 @@
                 row.style.display = 'none';
             }
         });
+
+        // Hide Badminton section if selected location is Khulna
+        const badmintonSection = document.getElementById('badminton-pricing-section');
+        if (badmintonSection) {
+            const selectEl = document.getElementById('location-pricing-select');
+            if (selectEl && selectEl.selectedIndex !== -1) {
+                const selectedText = selectEl.options[selectEl.selectedIndex].text.toUpperCase();
+                if (selectedText.includes('KHULNA') && locId !== 'all') {
+                    badmintonSection.style.display = 'none';
+                } else {
+                    badmintonSection.style.display = 'block';
+                }
+            }
+        }
     }
 
     function toggleRates(type) {
