@@ -239,7 +239,21 @@ def bookings():
         query['status'] = 'approved'
         
     if selected_location_id != 'all':
-        query['location_id'] = ObjectId(selected_location_id) if len(selected_location_id) == 24 else selected_location_id
+        from models.location import Location
+        locs = Location.find_all()
+        is_default_location = False
+        if locs and str(locs[0]['_id']) == selected_location_id:
+            is_default_location = True
+            
+        loc_obj_id = ObjectId(selected_location_id) if len(selected_location_id) == 24 else selected_location_id
+        if is_default_location:
+            query['$or'] = [
+                {'location_id': loc_obj_id},
+                {'location_id': {'$exists': False}},
+                {'location_id': None}
+            ]
+        else:
+            query['location_id'] = loc_obj_id
     
     bookings_list = Booking.find_all(query, sort=[('created_at', -1)])
     

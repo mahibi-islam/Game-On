@@ -45,11 +45,25 @@ def get_availability(date):
         is_weekend = date_obj.weekday() in [4, 5]
         rate_type = 'weekend' if is_weekend else 'weekday'
         
-        # Get bookings for this date and location to optimize check
-        bookings = Booking.find_all({
-            'date': date,
-            'location_id': ObjectId(location_id) if len(location_id) == 24 else location_id
-        })
+        # Check if the requested location is the default (first active) location
+        locs = Location.find_all({'enabled': True})
+        is_default_location = False
+        if locs and str(locs[0]['_id']) == location_id:
+            is_default_location = True
+
+        bookings_query = {'date': date}
+        loc_obj_id = ObjectId(location_id) if len(location_id) == 24 else location_id
+        if is_default_location:
+            # Legacy bookings do not have a location_id and are implicitly for Bogura (default location)
+            bookings_query['$or'] = [
+                {'location_id': loc_obj_id},
+                {'location_id': {'$exists': False}},
+                {'location_id': None}
+            ]
+        else:
+            bookings_query['location_id'] = loc_obj_id
+
+        bookings = Booking.find_all(bookings_query)
         
         booked_slot_ids = {str(b['time_slot']) for b in bookings if b.get('status') in ['approved', 'paid']}
         pending_slot_ids = {str(b['time_slot']) for b in bookings if b.get('status') == 'pending'}
