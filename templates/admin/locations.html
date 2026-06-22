@@ -1,0 +1,71 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Locations Management - Admin Panel{% endblock %}
+{% block page_title %}Locations Management{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px; display: flex; justify-content: flex-end;">
+    <a href="{{ url_for('admin.create_location') }}" class="admin-btn admin-btn-success" style="text-decoration: none; padding: 10px 20px; display: inline-flex; align-items: center; gap: 8px;">
+        <i class="fas fa-plus"></i> Add New Location
+    </a>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h2 class="admin-card-title"><i class="fas fa-map-marker-alt"></i> All Turf Locations</h2>
+    </div>
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Location Name</th>
+                    <th>Address</th>
+                    <th>Phone</th>
+                    <th>WhatsApp</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if locations %}
+                {% for location in locations %}
+                <tr>
+                    <td style="font-weight: bold; color: var(--primary-color);">{{ location.name }}</td>
+                    <td>{{ location.address }}</td>
+                    <td>{{ location.phone or 'N/A' }}</td>
+                    <td>{{ location.whatsapp or 'N/A' }}</td>
+                    <td>{{ location.email or 'N/A' }}</td>
+                    <td>
+                        {% if location.enabled %}
+                        <span style="background: #e1f5fe; color: #0288d1; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold;">Active</span>
+                        {% else %}
+                        <span style="background: #ffebee; color: #c62828; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold;">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="admin-table-actions">
+                            <a href="{{ url_for('admin.update_location', location_id=location._id) }}" class="admin-btn admin-btn-info" title="Edit Location">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ url_for('admin.delete_location', location_id=location._id) }}" method="POST"
+                                style="display: inline;"
+                                onsubmit="return confirm('Are you sure you want to delete this location? All slots under this location will lose their mapping!');">
+                                <button type="submit" class="admin-btn admin-btn-danger" title="Delete Location">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center;">No locations found.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

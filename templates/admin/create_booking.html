@@ -7,6 +7,29 @@
     <h2>Create Manual Booking</h2>
     <form method="POST" class="admin-form">
         <div class="form-group">
+            <label for="location_id">Select Location Venue *</label>
+            <select id="location_id" name="location_id" class="form-control" onchange="filterSlotsByLocation(this.value)" required>
+                <option value="">Select Location</option>
+                {% for loc in locations %}
+                <option value="{{ loc._id }}">{{ loc.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Select Sport *</label>
+            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                <button type="button" class="filter-tab active" onclick="selectSport('Football')" id="sport-btn-football" style="flex: 1; padding: 10px; font-weight: bold; border: 1px solid var(--border-color); text-align: center; cursor: pointer; border-radius: 5px;">
+                    <i class="fas fa-futbol"></i> Football
+                </button>
+                <button type="button" class="filter-tab" onclick="selectSport('Badminton')" id="sport-btn-badminton" style="flex: 1; padding: 10px; font-weight: bold; border: 1px solid var(--border-color); text-align: center; cursor: pointer; border-radius: 5px;">
+                    <i class="fas fa-table-tennis"></i> Badminton
+                </button>
+            </div>
+            <input type="hidden" id="selected_sport" name="sport" value="Football">
+        </div>
+
+        <div class="form-group">
             <label for="date">Date *</label>
             <input type="date" id="date" name="date" class="form-control" required>
         </div>
@@ -14,10 +37,7 @@
         <div class="form-group">
             <label for="time_slot">Time Slot *</label>
             <select id="time_slot" name="time_slot" class="form-control" required>
-                <option value="">Select Time Slot</option>
-                {% for slot in slots %}
-                <option value="{{ slot._id }}">{{ slot.time }} - ৳{{ slot.price }}</option>
-                {% endfor %}
+                <option value="">Select Location first</option>
             </select>
         </div>
         
@@ -57,10 +77,78 @@
         </div>
         
         <div class="form-actions">
-            <a href="{{ url_for('admin.bookings') }}" class="btn btn-secondary">Cancel</a>
-            <button type="submit" class="btn btn-primary">Create Booking</button>
+            <a href="{{ url_for('admin.bookings') }}" class="btn btn-secondary" style="text-decoration: none; padding: 10px 20px; display: inline-block;">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">Create Booking</button>
         </div>
     </form>
 </div>
 {% endblock %}
 
+{% block extra_js %}
+<script>
+    // Master list of all enabled slots injected from backend
+    const allSlots = [
+        {% for slot in slots %}
+        {
+            id: "{{ slot._id }}",
+            time: "{{ slot.time }}",
+            price: "{{ slot.price }}",
+            sport: "{{ slot.sport|title }}",
+            locationId: "{{ slot.location_id }}"
+        },
+        {% endfor %}
+    ];
+    
+    // Minimum date is today
+    document.getElementById('date').min = new Date().toISOString().split('T')[0];
+
+    let currentSport = 'Football';
+
+    function selectSport(sport) {
+        currentSport = sport;
+        document.getElementById('selected_sport').value = sport;
+        
+        const footballBtn = document.getElementById('sport-btn-football');
+        const badmintonBtn = document.getElementById('sport-btn-badminton');
+        
+        if (sport === 'Football') {
+            footballBtn.classList.add('active');
+            badmintonBtn.classList.remove('active');
+        } else {
+            badmintonBtn.classList.add('active');
+            footballBtn.classList.remove('active');
+        }
+        
+        const locId = document.getElementById('location_id').value;
+        filterSlots(locId, currentSport);
+    }
+
+    function filterSlotsByLocation(locId) {
+        filterSlots(locId, currentSport);
+    }
+
+    function filterSlots(locId, sport) {
+        const slotSelect = document.getElementById('time_slot');
+        slotSelect.innerHTML = '<option value="">Select Time Slot</option>';
+        
+        if (!locId) {
+            slotSelect.innerHTML = '<option value="">Select Location first</option>';
+            return;
+        }
+        
+        const filtered = allSlots.filter(s => s.locationId === locId && s.sport.toLowerCase() === sport.toLowerCase());
+        
+        if (filtered.length === 0) {
+            slotSelect.innerHTML = `<option value="">No ${sport} slots configured for this location</option>`;
+            return;
+        }
+        
+        filtered.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = `${s.time} - ৳${s.price}`;
+            slotSelect.appendChild(opt);
+        });
+    }
+</script>
+{% endblock %}

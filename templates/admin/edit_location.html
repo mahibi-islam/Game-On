@@ -1,0 +1,59 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Edit Location - Admin Panel{% endblock %}
+{% block page_title %}Edit Location{% endblock %}
+
+{% block content %}
+<div class="admin-form-container">
+    <h2>Edit Location: {{ location.name }}</h2>
+    <form method="POST" class="admin-form">
+        <div class="form-group">
+            <label for="name">Location Name *</label>
+            <input type="text" id="name" name="name" class="form-control" value="{{ location.name }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="address">Address *</label>
+            <textarea id="address" name="address" class="form-control" rows="2" required>{{ location.address }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="phone">Phone *</label>
+            <input type="tel" id="phone" name="phone" class="form-control" value="{{ location.phone }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="whatsapp">WhatsApp Number *</label>
+            <input type="tel" id="whatsapp" name="whatsapp" class="form-control" value="{{ location.whatsapp }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" class="form-control" value="{{ location.email or '' }}">
+        </div>
+
+        <div class="form-group">
+            <label for="rules">Rules & Regulations</label>
+            <textarea id="rules" name="rules" class="form-control" rows="4">{{ location.rules or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="homepage_content">Welcome Content / Description</label>
+            <textarea id="homepage_content" name="homepage_content" class="form-control" rows="3">{{ location.homepage_content or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="enabled">Status</label>
+            <select id="enabled" name="enabled" class="form-control">
+                <option value="true" {% if location.enabled %}selected{% endif %}>Active / Enabled</option>
+                <option value="false" {% if not location.enabled %}selected{% endif %}>Inactive / Disabled</option>
+            </select>
+        </div>
+
+        <div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+            <button type="submit" class="admin-btn admin-btn-success" style="padding: 10px 20px;">Update Location</button>
+            <a href="{{ url_for('admin.locations') }}" class="admin-btn admin-btn-info" style="text-decoration: none; padding: 10px 20px;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
