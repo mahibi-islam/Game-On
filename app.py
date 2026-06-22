@@ -16,10 +16,10 @@ def create_app(config_name='development'):
     # Load configuration
     if config_name == 'production':
         from config import ProductionConfig
-        app.config.from_object(ProductionConfig)
+        app.config.from_object(ProductionConfig())
     else:
         from config import DevelopmentConfig
-        app.config.from_object(DevelopmentConfig)
+        app.config.from_object(DevelopmentConfig())
     
     # Initialize extensions
     mongo.init_app(app)
