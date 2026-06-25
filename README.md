@@ -40,7 +40,6 @@ GOB/
    python run.py
    ```
 
-
 ## Features
 
 - Online booking system

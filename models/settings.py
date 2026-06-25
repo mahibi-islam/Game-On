@@ -44,7 +44,7 @@ class Settings:
         """Initialize default settings"""
         if not Settings.find_one():
             Settings.get_collection().insert_one({
-                'turf_name': 'GAME ON BOGURA',
+                'turf_name': 'GAME ON',
                 'address': 'Gohail Road,Bogura',
                 'phone': '+8801780037275',
                 'whatsapp': '+8801780037275',

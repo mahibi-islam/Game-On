@@ -139,24 +139,24 @@ class Location:
             settings = Settings.find_one()
             if settings:
                 gohail_road = {
-                    'name': settings.get('turf_name', 'GAME ON BOGURA - Gohail Road'),
+                    'name': settings.get('turf_name', 'GAME ON') + ' - Gohail Road',
                     'address': settings.get('address', 'Gohail Road, Bogura'),
                     'phone': settings.get('phone', '+8801780037275'),
                     'whatsapp': settings.get('whatsapp', '+8801780037275'),
                     'email': settings.get('email', 'bogura.gameon@gmail.com'),
                     'rules': settings.get('rules', 'Please maintain cleanliness. No smoking allowed.'),
-                    'homepage_content': settings.get('homepage_content', 'Welcome to GAME ON BOGURA!'),
+                    'homepage_content': settings.get('homepage_content', 'Welcome to GAME ON!'),
                     'enabled': True
                 }
             else:
                 gohail_road = {
-                    'name': 'GAME ON BOGURA - Gohail Road',
+                    'name': 'GAME ON - Gohail Road',
                     'address': 'Gohail Road, Bogura',
                     'phone': '+8801780037275',
                     'whatsapp': '+8801780037275',
                     'email': 'bogura.gameon@gmail.com',
                     'rules': 'Please maintain cleanliness. No smoking allowed.',
-                    'homepage_content': 'Welcome to GAME ON BOGURA!',
+                    'homepage_content': 'Welcome to GAME ON!',
                     'enabled': True
                 }
             
