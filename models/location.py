@@ -163,8 +163,8 @@ class Location:
             khulna = {
                 'name': 'GAME ON KHULNA',
                 'address': 'Khulna Sadar, Khulna',
-                'phone': '+8801780037276',
-                'whatsapp': '+8801780037276',
+                'phone': '+8801333770044',
+                'whatsapp': '+8801333770044',
                 'email': 'khulna.gameon@gmail.com',
                 'rules': 'Please maintain cleanliness. Wear proper shoes.',
                 'homepage_content': 'Welcome to our premium Khulna Turf!',
