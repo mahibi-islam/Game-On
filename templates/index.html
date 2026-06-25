@@ -5,7 +5,13 @@
 {% block content %}
 <section class="hero" id="home-hero">
     <div class="hero-slides">
-        {% if settings and settings.carousel_images %}
+        {% if gallery_images %}
+        {% for image in gallery_images %}
+        {% set img_url = image.path if image.path.startswith('http') else url_for('static', filename=image.path) %}
+        <div class="hero-slide {% if loop.first %}active{% endif %}"
+            style="background-image: url('{{ img_url }}');"></div>
+        {% endfor %}
+        {% elif settings and settings.carousel_images %}
         {% for image in settings.carousel_images %}
         {% set img_url = image if image.startswith('http') else url_for('static', filename='carousel/' + image) %}
         <div class="hero-slide {% if loop.first %}active{% endif %}"
