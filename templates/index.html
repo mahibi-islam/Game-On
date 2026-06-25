@@ -389,30 +389,6 @@
 </section>
 {% endif %}
 
-{% if gallery_images %}
-<section class="gallery-section" style="padding: 5rem 1rem; background: var(--bg-dark); text-align: center;" data-aos="fade-up">
-    <div class="container">
-        <h2 class="section-title" style="margin-bottom: 2rem;">Photo Gallery</h2>
-        <div class="gallery-grid">
-            {% for image in gallery_images %}
-            <div class="gallery-item" data-aos="fade-up" data-aos-delay="{{ loop.index * 100 }}">
-                {% set img_url = image.path if image.path.startswith('http') else url_for('static', filename=image.path) %}
-                <img src="{{ img_url }}" alt="Gallery Image" onclick="openLightbox('{{ img_url }}')">
-            </div>
-            {% endfor %}
-        </div>
-        <div style="margin-top: 3rem;">
-            <a href="{{ url_for('user.gallery') }}" class="btn btn-primary" style="padding: 10px 30px; font-weight: bold; border-radius: 25px;">View Full Gallery</a>
-        </div>
-    </div>
-</section>
-
-<!-- Lightbox Modal -->
-<div id="lightbox" class="lightbox" onclick="closeLightbox()">
-    <span class="lightbox-close">&times;</span>
-    <img id="lightbox-img" src="" alt="Gallery Image">
-</div>
-{% endif %}
 
 <section class="location" data-aos="fade-up">
     <div class="container">
@@ -496,19 +472,5 @@
         btnElement.classList.add('btn-primary');
     }
 
-    function openLightbox(src) {
-        const lightbox = document.getElementById('lightbox');
-        if (lightbox) {
-            document.getElementById('lightbox-img').src = src;
-            lightbox.style.display = 'flex';
-        }
-    }
-
-    function closeLightbox() {
-        const lightbox = document.getElementById('lightbox');
-        if (lightbox) {
-            lightbox.style.display = 'none';
-        }
-    }
 </script>
 {% endblock %}
