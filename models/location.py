@@ -129,7 +129,7 @@ class Location:
                 'name': 'GAME ON KHULNA',
                 'address': 'Khulna Sadar, Khulna',
                 'email': 'khulna.gameon@gmail.com',
-                'homepage_content': 'Welcome to our premium Khulna Turf!'
+                'homepage_content': 'Welcome to GAME ON KHULNA!'
             }}
         )
 
@@ -167,7 +167,7 @@ class Location:
                 'whatsapp': '+8801333770044',
                 'email': 'khulna.gameon@gmail.com',
                 'rules': 'Please maintain cleanliness. Wear proper shoes.',
-                'homepage_content': 'Welcome to our premium Khulna Turf!',
+                'homepage_content': 'Welcome to GAME ON KHULNA!',
                 'enabled': True
             }
             
