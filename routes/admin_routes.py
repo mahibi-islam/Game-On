@@ -726,6 +726,25 @@ def create_location():
     """Create a new location"""
     from models.location import Location
     if request.method == 'POST':
+        image_url = request.form.get('image_url', '')
+        if 'image_file' in request.files:
+            file = request.files['image_file']
+            if file and file.filename != '':
+                if os.environ.get('CLOUDINARY_URL'):
+                    import cloudinary
+                    import cloudinary.uploader
+                    try:
+                        res = cloudinary.uploader.upload(file, folder="locations")
+                        image_url = res.get('secure_url')
+                    except Exception as e:
+                        flash(f'Cloudinary upload error: {str(e)}', 'error')
+                else:
+                    filename = secure_filename(f"{int(get_bangladesh_now().timestamp())}_{file.filename}")
+                    os.makedirs('static/uploads', exist_ok=True)
+                    filepath = os.path.join('static/uploads', filename)
+                    file.save(filepath)
+                    image_url = f"uploads/{filename}"
+
         data = {
             'name': request.form.get('name'),
             'address': request.form.get('address'),
@@ -734,7 +753,8 @@ def create_location():
             'email': request.form.get('email'),
             'rules': request.form.get('rules'),
             'homepage_content': request.form.get('homepage_content'),
-            'enabled': request.form.get('enabled') == 'true'
+            'enabled': request.form.get('enabled') == 'true',
+            'image_url': image_url
         }
         Location.create(data)
         flash('Location created successfully', 'success')
@@ -753,6 +773,25 @@ def update_location(location_id):
         return redirect(url_for('admin.locations'))
         
     if request.method == 'POST':
+        image_url = request.form.get('image_url', '')
+        if 'image_file' in request.files:
+            file = request.files['image_file']
+            if file and file.filename != '':
+                if os.environ.get('CLOUDINARY_URL'):
+                    import cloudinary
+                    import cloudinary.uploader
+                    try:
+                        res = cloudinary.uploader.upload(file, folder="locations")
+                        image_url = res.get('secure_url')
+                    except Exception as e:
+                        flash(f'Cloudinary upload error: {str(e)}', 'error')
+                else:
+                    filename = secure_filename(f"{int(get_bangladesh_now().timestamp())}_{file.filename}")
+                    os.makedirs('static/uploads', exist_ok=True)
+                    filepath = os.path.join('static/uploads', filename)
+                    file.save(filepath)
+                    image_url = f"uploads/{filename}"
+
         data = {
             'name': request.form.get('name'),
             'address': request.form.get('address'),
@@ -761,7 +800,8 @@ def update_location(location_id):
             'email': request.form.get('email'),
             'rules': request.form.get('rules'),
             'homepage_content': request.form.get('homepage_content'),
-            'enabled': request.form.get('enabled') == 'true'
+            'enabled': request.form.get('enabled') == 'true',
+            'image_url': image_url
         }
         Location.update(location_id, data)
         flash('Location updated successfully', 'success')
