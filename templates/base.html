@@ -62,11 +62,14 @@
                     <p style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
                         Premium multi-location sports turf platform offering state-of-the-art facilities for football and badminton matches.
                     </p>
-                    {% if settings and settings.facebook %}
-                    <a href="{{ settings.facebook }}" target="_blank" style="color: #fff; font-size: 1.5rem; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#fff'">
-                        <i class="fab fa-facebook"></i>
-                    </a>
-                    {% endif %}
+                    <div style="display: flex; gap: 15px; margin-top: 10px;">
+                        <a href="YOUR_BOGURA_FACEBOOK_URL" target="_blank" title="GAME ON Bogura Facebook" style="color: #fff; font-size: 1.5rem; text-decoration: none; transition: color 0.3s; display: inline-flex; align-items: center; gap: 6px;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#fff'">
+                            <i class="fab fa-facebook"></i> <span style="font-size: 0.85rem; color: var(--text-secondary);">Bogura</span>
+                        </a>
+                        <a href="YOUR_KHULNA_FACEBOOK_URL" target="_blank" title="GAME ON Khulna Facebook" style="color: #fff; font-size: 1.5rem; text-decoration: none; transition: color 0.3s; display: inline-flex; align-items: center; gap: 6px;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#fff'">
+                            <i class="fab fa-facebook"></i> <span style="font-size: 0.85rem; color: var(--text-secondary);">Khulna</span>
+                        </a>
+                    </div>
                 </div>
                 
                 <div class="footer-section" style="flex: 2; min-width: 280px;">
