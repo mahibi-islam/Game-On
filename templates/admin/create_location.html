@@ -6,7 +6,7 @@
 {% block content %}
 <div class="admin-form-container">
     <h2>Add New Turf Location</h2>
-    <form method="POST" class="admin-form">
+    <form method="POST" class="admin-form" enctype="multipart/form-data">
         <div class="form-group">
             <label for="name">Location Name *</label>
             <input type="text" id="name" name="name" class="form-control" placeholder="e.g. GAME ON - Cantonment" required>
@@ -40,6 +40,13 @@
         <div class="form-group">
             <label for="homepage_content">Welcome Content / Description</label>
             <textarea id="homepage_content" name="homepage_content" class="form-control" rows="3" placeholder="Welcome message for this location"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="image_file">Upload Turf Cover Image</label>
+            <input type="file" id="image_file" name="image_file" class="form-control" accept="image/*">
+            <small style="color: #bbb; display: block; margin-top: 5px;">Or specify an external image URL:</small>
+            <input type="text" id="image_url" name="image_url" class="form-control" placeholder="e.g., https://image-url..." style="margin-top: 5px;">
         </div>
 
         <div class="form-group">
