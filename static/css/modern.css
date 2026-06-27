@@ -149,17 +149,53 @@ body {
     font-size: 4rem;
 }
 
+.hero h1 span {
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    -webkit-text-fill-color: var(--primary-color) !important;
+}
+
 @media (max-width: 768px) {
     .hero {
-        height: 60vh !important;
-        min-height: 400px;
+        height: auto !important;
+        min-height: 420px;
+        padding: 5rem 1rem 3rem !important;
     }
 
     .hero h1 {
-        font-size: 2.5rem;
+        font-size: 2.2rem !important;
         padding: 0 1rem;
+        line-height: 1.25;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero h1 {
+        font-size: 1.8rem !important;
     }
 
+    .hero-content p,
+    .hero-content .lead {
+        font-size: 0.85rem;
+    }
+
+    .quick-search-bar {
+        margin: 1.5rem auto 0 !important;
+        padding: 15px !important;
+    }
+
+    .stats-grid-wrapper {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
+    }
+
+    .stat-box .stat-number {
+        font-size: 1.6rem;
+    }
+}
+
+@media (max-width: 768px) {
     /* Mobile Navbar */
     .nav-toggle {
         display: flex;
@@ -216,6 +252,29 @@ body {
         padding: 0 15px;
     }
 
+    .hero-content p,
+    .hero-content .lead {
+        font-size: 0.95rem;
+        padding: 0 0.5rem;
+    }
+
+    .stats-grid-wrapper {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.2rem;
+    }
+
+    .stat-box .stat-number {
+        font-size: 2rem;
+    }
+
+    .stat-box .stat-label {
+        font-size: 0.75rem;
+    }
+
+    .turf-grid {
+        grid-template-columns: 1fr !important;
+    }
+
     .booking-steps {
         flex-direction: row !important;
         justify-content: space-between;
@@ -264,6 +323,15 @@ body {
         margin-bottom: 1rem;
         border-radius: 8px;
         border: 1px solid var(--glass-border);
+    }
+
+    .footer-content {
+        flex-direction: column !important;
+        text-align: center;
+    }
+
+    .footer-section {
+        min-width: 100% !important;
     }
 }
 
