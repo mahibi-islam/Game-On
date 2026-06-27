@@ -50,6 +50,11 @@
         </div>
 
         <div class="form-group">
+            <label for="facebook_url">Facebook Page URL</label>
+            <input type="url" id="facebook_url" name="facebook_url" class="form-control" value="{{ location.facebook_url or '' }}" placeholder="e.g. https://www.facebook.com/your-turf">
+        </div>
+
+        <div class="form-group">
             <label for="enabled">Status</label>
             <select id="enabled" name="enabled" class="form-control">
                 <option value="true" {% if location.enabled %}selected{% endif %}>Active / Enabled</option>

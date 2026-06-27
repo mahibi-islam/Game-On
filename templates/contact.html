@@ -61,7 +61,7 @@
                     </div>
 
                     <!-- Email -->
-                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <div style="margin-bottom: 1.2rem; display: flex; align-items: flex-start; gap: 12px;">
                         <div style="width: 24px; display: flex; justify-content: center; margin-top: 3px;">
                             <i class="fas fa-envelope" style="color: var(--primary-color); font-size: 1.25rem;"></i>
                         </div>
@@ -76,6 +76,21 @@
                             </p>
                         </div>
                     </div>
+
+                    <!-- Facebook -->
+                    {% if loc.facebook_url %}
+                    <div style="display: flex; align-items: flex-start; gap: 12px;">
+                        <div style="width: 24px; display: flex; justify-content: center; margin-top: 3px;">
+                            <i class="fab fa-facebook" style="color: var(--primary-color); font-size: 1.25rem;"></i>
+                        </div>
+                        <div>
+                            <strong style="display: block; font-size: 0.8rem; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.5px;">Facebook</strong>
+                            <p style="font-size: 0.95rem; margin-top: 2px;">
+                                <a href="{{ loc.facebook_url }}" target="_blank" style="color: #fff; text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#fff'">Visit Facebook Page</a>
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 

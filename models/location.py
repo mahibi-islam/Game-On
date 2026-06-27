@@ -48,7 +48,8 @@ class Location:
             'rules': data.get('rules', 'Please maintain cleanliness. No smoking allowed.'),
             'homepage_content': data.get('homepage_content', 'Welcome to GAME ON!'),
             'enabled': data.get('enabled', True),
-            'image_url': data.get('image_url', '')
+            'image_url': data.get('image_url', ''),
+            'facebook_url': data.get('facebook_url', '')
         }
         result = Location.get_collection().insert_one(location_data)
         location_data['_id'] = str(result.inserted_id)
@@ -98,7 +99,7 @@ class Location:
     def update(location_id, data):
         """Update location details"""
         update_data = {}
-        for key in ['name', 'address', 'phone', 'whatsapp', 'email', 'rules', 'homepage_content', 'enabled', 'image_url']:
+        for key in ['name', 'address', 'phone', 'whatsapp', 'email', 'rules', 'homepage_content', 'enabled', 'image_url', 'facebook_url']:
             if key in data:
                 if key == 'enabled':
                     update_data[key] = bool(data[key])

@@ -754,7 +754,8 @@ def create_location():
             'rules': request.form.get('rules'),
             'homepage_content': request.form.get('homepage_content'),
             'enabled': request.form.get('enabled') == 'true',
-            'image_url': image_url
+            'image_url': image_url,
+            'facebook_url': request.form.get('facebook_url', '')
         }
         Location.create(data)
         flash('Location created successfully', 'success')
@@ -801,7 +802,8 @@ def update_location(location_id):
             'rules': request.form.get('rules'),
             'homepage_content': request.form.get('homepage_content'),
             'enabled': request.form.get('enabled') == 'true',
-            'image_url': image_url
+            'image_url': image_url,
+            'facebook_url': request.form.get('facebook_url', '')
         }
         Location.update(location_id, data)
         flash('Location updated successfully', 'success')
