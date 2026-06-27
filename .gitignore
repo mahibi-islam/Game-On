@@ -30,15 +30,19 @@ instance/
 # MongoDB
 *.log
 
-# Excel files (optional - remove if you want to track bookings.xlsx)
-# bookings.xlsx
+# Excel booking data
+bookings.xlsx
 
 # IDE
 .vscode/
 .idea/
+.vs/
 *.swp
 *.swo
 *~
+
+# Backup files
+*.bak
 
 # OS
 .DS_Store
@@ -58,4 +62,3 @@ static/uploads/*
 static/gallery/*
 !static/uploads/.gitkeep
 !static/gallery/.gitkeep
-

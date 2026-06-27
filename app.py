@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, Response
 import os
 from db import mongo
 
@@ -48,6 +48,67 @@ def create_app(config_name='development'):
         active_locations = Location.find_all({'enabled': True})
         return dict(settings=settings, active_locations=active_locations)
     
+    # ── Security: security.txt (RFC 9116) ──
+    @app.route('/.well-known/security.txt')
+    def security_txt():
+        content = (
+            "Contact: mailto:code.mahibi@gmail.com\n"
+            "Preferred-Languages: en, bn\n"
+            "Canonical: https://gameon.bd/.well-known/security.txt\n"
+            "Expires: 2027-06-27T00:00:00.000Z\n"
+        )
+        return Response(content, mimetype='text/plain')
+
+    # ── Security: robots.txt (block AI crawlers) ──
+    @app.route('/robots.txt')
+    def robots_txt():
+        content = (
+            "User-agent: *\n"
+            "Allow: /\n"
+            "\n"
+            "# Block AI crawlers and scrapers\n"
+            "User-agent: GPTBot\n"
+            "Disallow: /\n"
+            "\n"
+            "User-agent: ChatGPT-User\n"
+            "Disallow: /\n"
+            "\n"
+            "User-agent: CCBot\n"
+            "Disallow: /\n"
+            "\n"
+            "User-agent: Google-Extended\n"
+            "Disallow: /\n"
+            "\n"
+            "User-agent: anthropic-ai\n"
+            "Disallow: /\n"
+            "\n"
+            "User-agent: ClaudeBot\n"
+            "Disallow: /\n"
+            "\n"
+            "User-agent: Bytespider\n"
+            "Disallow: /\n"
+            "\n"
+            "User-agent: Meta-ExternalAgent\n"
+            "Disallow: /\n"
+            "\n"
+            "User-agent: PerplexityBot\n"
+            "Disallow: /\n"
+            "\n"
+            "User-agent: Applebot-Extended\n"
+            "Disallow: /\n"
+        )
+        return Response(content, mimetype='text/plain')
+
+    # ── Security: Response Headers ──
+    @app.after_request
+    def add_security_headers(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
+        return response
+
     # Initialize database
     from models.booking import Booking
     from models.slot import Slot
@@ -64,3 +125,4 @@ def create_app(config_name='development'):
         Settings.init_defaults()
     
     return app
+
