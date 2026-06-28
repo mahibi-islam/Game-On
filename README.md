@@ -49,3 +49,6 @@ GOB/
 - Gallery management
 - Payment tracking
 
+
+Currently working on mail notification system so when a user books a slot the admin will be notified via an email.
+
