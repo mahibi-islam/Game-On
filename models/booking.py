@@ -53,7 +53,8 @@ class Booking:
             'status': data.get('status', 'pending'),
             'notes': data.get('notes', ''),
             'created_at': get_bangladesh_now().isoformat(),
-            'location_id': ObjectId(data.get('location_id')) if data.get('location_id') else None
+            'location_id': ObjectId(data.get('location_id')) if data.get('location_id') else None,
+            'user_id': data.get('user_id')
         }
         result = Booking.get_collection().insert_one(booking_data)
         booking_data['_id'] = str(result.inserted_id)
@@ -66,6 +67,13 @@ class Booking:
         # Send WhatsApp notification
         Booking.send_whatsapp_notification(booking_data)
         
+        # Send email notifications
+        try:
+            from utils.email_utils import send_booking_emails
+            send_booking_emails(booking_data)
+        except Exception as e:
+            print(f"Error calling send_booking_emails: {e}")
+            
         return booking_data
     
     @staticmethod
