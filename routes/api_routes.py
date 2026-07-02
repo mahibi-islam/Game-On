@@ -53,6 +53,7 @@ def get_availability(date):
 
         location = Location.find_by_id(location_id)
         online_booking_enabled = location.get('online_booking_enabled', True) if location else True
+        phone = location.get('phone', '') if location else ''
 
         bookings_query = {'date': date}
         loc_obj_id = ObjectId(location_id) if len(location_id) == 24 else location_id
@@ -101,7 +102,8 @@ def get_availability(date):
                 'is_pending': is_pending,
                 'is_past': is_past,
                 'location_id': str(slot.get('location_id')) if slot.get('location_id') else None,
-                'online_booking_enabled': online_booking_enabled
+                'online_booking_enabled': online_booking_enabled,
+                'phone': phone
             })
         
         return jsonify(availability)

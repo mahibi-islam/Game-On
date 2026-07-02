@@ -347,7 +347,7 @@
                             ${slot.available ?
                                 (slot.online_booking_enabled ?
                                 `<a href="/booking?location=${encodeURIComponent(locId)}&sport=${encodeURIComponent(selectedSport)}&date=${encodeURIComponent(date)}&slot=${encodeURIComponent(slot._id)}" class="btn btn-sm btn-primary">Book Now</a>` :
-                                `<span class="badge" style="padding: 6px 12px; font-weight: bold; border-radius: 4px; color: #000 !important; background-color: #ffc107 !important; display: inline-block;"><i class="fas fa-phone-alt" style="margin-right: 5px;"></i> Call to Book</span>`) :
+                                `<a href="tel:${slot.phone}" class="badge" style="padding: 6px 12px; font-weight: bold; border-radius: 4px; color: #000 !important; background-color: #ffc107 !important; display: inline-block; text-decoration: none;"><i class="fas fa-phone-alt" style="margin-right: 5px;"></i> Call to Book</a>`) :
                             '<span class="text-muted">Unavailable</span>'
                         }
                         </td>
