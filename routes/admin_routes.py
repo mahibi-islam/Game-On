@@ -754,6 +754,7 @@ def create_location():
             'rules': request.form.get('rules'),
             'homepage_content': request.form.get('homepage_content'),
             'enabled': request.form.get('enabled') == 'true',
+            'online_booking_enabled': request.form.get('online_booking_enabled') == 'true',
             'image_url': image_url,
             'facebook_url': request.form.get('facebook_url', '')
         }
@@ -802,6 +803,7 @@ def update_location(location_id):
             'rules': request.form.get('rules'),
             'homepage_content': request.form.get('homepage_content'),
             'enabled': request.form.get('enabled') == 'true',
+            'online_booking_enabled': request.form.get('online_booking_enabled') == 'true',
             'image_url': image_url,
             'facebook_url': request.form.get('facebook_url', '')
         }

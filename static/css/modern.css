@@ -371,6 +371,18 @@ body {
     color: rgba(255, 255, 255, 0.3);
 }
 
+.slot-card.bookings-disabled {
+    background: rgba(255, 152, 0, 0.1);
+    border-color: rgba(255, 152, 0, 0.3);
+    color: rgba(255, 255, 255, 0.8);
+    cursor: not-allowed;
+}
+
+.slot-card.bookings-disabled .slot-status {
+    color: #ff9800;
+    font-weight: bold;
+}
+
 /* Footers & Inputs */
 .footer {
     background: #05051a;

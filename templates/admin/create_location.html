@@ -62,6 +62,14 @@
             </select>
         </div>
 
+        <div class="form-group">
+            <label for="online_booking_enabled">Online Bookings Status</label>
+            <select id="online_booking_enabled" name="online_booking_enabled" class="form-control">
+                <option value="true" selected>Enabled</option>
+                <option value="false">Disabled (Users cannot book slots online)</option>
+            </select>
+        </div>
+
         <div class="form-actions" style="margin-top: 20px; display: flex; gap: 10px;">
             <button type="submit" class="admin-btn admin-btn-success" style="padding: 10px 20px;">Save Location</button>
             <a href="{{ url_for('admin.locations') }}" class="admin-btn admin-btn-info" style="text-decoration: none; padding: 10px 20px;">Cancel</a>

@@ -48,6 +48,7 @@ class Location:
             'rules': data.get('rules', 'Please maintain cleanliness. No smoking allowed.'),
             'homepage_content': data.get('homepage_content', 'Welcome to GAME ON!'),
             'enabled': data.get('enabled', True),
+            'online_booking_enabled': data.get('online_booking_enabled', True),
             'image_url': data.get('image_url', ''),
             'facebook_url': data.get('facebook_url', '')
         }
@@ -99,9 +100,9 @@ class Location:
     def update(location_id, data):
         """Update location details"""
         update_data = {}
-        for key in ['name', 'address', 'phone', 'whatsapp', 'email', 'rules', 'homepage_content', 'enabled', 'image_url', 'facebook_url']:
+        for key in ['name', 'address', 'phone', 'whatsapp', 'email', 'rules', 'homepage_content', 'enabled', 'online_booking_enabled', 'image_url', 'facebook_url']:
             if key in data:
-                if key == 'enabled':
+                if key in ['enabled', 'online_booking_enabled']:
                     update_data[key] = bool(data[key])
                 else:
                     update_data[key] = data[key]
@@ -148,7 +149,8 @@ class Location:
                     'email': settings.get('email', 'bogura.gameon@gmail.com'),
                     'rules': settings.get('rules', 'Please maintain cleanliness. No smoking allowed.'),
                     'homepage_content': settings.get('homepage_content', 'Welcome to GAME ON!'),
-                    'enabled': True
+                    'enabled': True,
+                    'online_booking_enabled': True
                 }
             else:
                 gohail_road = {
@@ -159,7 +161,8 @@ class Location:
                     'email': 'bogura.gameon@gmail.com',
                     'rules': 'Please maintain cleanliness. No smoking allowed.',
                     'homepage_content': 'Welcome to GAME ON!',
-                    'enabled': True
+                    'enabled': True,
+                    'online_booking_enabled': True
                 }
             
             khulna = {
@@ -170,7 +173,8 @@ class Location:
                 'email': 'khulna.gameon@gmail.com',
                 'rules': 'Please maintain cleanliness. Wear proper shoes.',
                 'homepage_content': 'Welcome to GAME ON KHULNA!',
-                'enabled': True
+                'enabled': True,
+                'online_booking_enabled': True
             }
             
             gohail_ref = Location.get_collection().insert_one(gohail_road)

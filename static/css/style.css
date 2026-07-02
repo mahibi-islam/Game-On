@@ -359,6 +359,18 @@ section {
     border-color: var(--primary-color);
 }
 
+.slot-card.bookings-disabled {
+    background: #fff8e1;
+    border-color: #ffe082;
+    color: #5d4037;
+    cursor: not-allowed;
+}
+
+.slot-card.bookings-disabled .slot-status {
+    color: #f57c00;
+    font-weight: bold;
+}
+
 .slot-time {
     font-weight: bold;
     font-size: 1.1rem;

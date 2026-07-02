@@ -51,6 +51,9 @@ def get_availability(date):
         if locs and str(locs[0]['_id']) == location_id:
             is_default_location = True
 
+        location = Location.find_by_id(location_id)
+        online_booking_enabled = location.get('online_booking_enabled', True) if location else True
+
         bookings_query = {'date': date}
         loc_obj_id = ObjectId(location_id) if len(location_id) == 24 else location_id
         if is_default_location:
@@ -97,7 +100,8 @@ def get_availability(date):
                 'is_booked': is_booked,
                 'is_pending': is_pending,
                 'is_past': is_past,
-                'location_id': str(slot.get('location_id')) if slot.get('location_id') else None
+                'location_id': str(slot.get('location_id')) if slot.get('location_id') else None,
+                'online_booking_enabled': online_booking_enabled
             })
         
         return jsonify(availability)
@@ -128,6 +132,14 @@ def create_booking():
         slot = Slot.find_by_id(time_slot)
         if not slot:
             return jsonify({'error': 'Invalid time slot'}), 400
+
+        # Verify online booking is enabled for the location
+        from models.location import Location
+        loc_id = slot.get('location_id')
+        if loc_id:
+            location = Location.find_by_id(str(loc_id))
+            if location and not location.get('online_booking_enabled', True):
+                return jsonify({'error': 'Online bookings are currently disabled for this location. Please contact admin to book.'}), 400
         
         booking_data = {
             'date': date,

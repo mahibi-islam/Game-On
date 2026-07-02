@@ -24,6 +24,7 @@
                     <th>WhatsApp</th>
                     <th>Email</th>
                     <th>Status</th>
+                    <th>Online Bookings</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -41,6 +42,13 @@
                         <span style="background: #e1f5fe; color: #0288d1; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold;">Active</span>
                         {% else %}
                         <span style="background: #ffebee; color: #c62828; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold;">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if location.online_booking_enabled or location.online_booking_enabled is not defined %}
+                        <span style="background: #e8f5e9; color: #2e7d32; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold;">Enabled</span>
+                        {% else %}
+                        <span style="background: #fff3e0; color: #e65100; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold;">Disabled</span>
                         {% endif %}
                     </td>
                     <td>

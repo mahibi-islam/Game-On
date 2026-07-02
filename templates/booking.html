@@ -352,7 +352,7 @@
                     return;
                 }
 
-                container.innerHTML = data.map(slot => {
+                 container.innerHTML = data.map(slot => {
                     let statusClass = 'available';
                     let statusText = 'Available';
 
@@ -365,6 +365,9 @@
                     } else if (slot.is_past) {
                         statusClass = 'past';
                         statusText = 'Unavailable';
+                    } else if (!slot.online_booking_enabled) {
+                        statusClass = 'bookings-disabled';
+                        statusText = 'Call to Book';
                     }
 
                     return `
@@ -372,7 +375,7 @@
                           data-slot-id="${slot._id}" 
                           data-time="${slot.time}" 
                           data-price="${slot.price}"
-                          onclick="${slot.available ? `selectSlot('${slot._id}', '${slot.time}', ${slot.price}, ${slot.discount_active}, ${slot.discount_percent})` : ''}">
+                          onclick="${slot.available ? (slot.online_booking_enabled ? `selectSlot('${slot._id}', '${slot.time}', ${slot.price}, ${slot.discount_active}, ${slot.discount_percent})` : `showBookingDisabledAlert()`) : ''}">
                         <div class="slot-time">${slot.time}</div>
                         <div class="slot-price">
                             ${slot.discount_active ?
@@ -389,7 +392,7 @@
                 // Check for preselected slot
                 if (preselectedSlotId) {
                     const foundSlot = data.find(s => s._id === preselectedSlotId);
-                    if (foundSlot && foundSlot.available) {
+                    if (foundSlot && foundSlot.available && foundSlot.online_booking_enabled) {
                         selectSlot(foundSlot._id, foundSlot.time, foundSlot.price, foundSlot.discount_active, foundSlot.discount_percent);
                         preselectedSlotId = '';
                         setTimeout(() => {
@@ -490,6 +493,10 @@
         const message = `Booking Confirmed!\nBooking ID: ${bookingId}\nLocation: ${selectedLocationName}\nDate: ${selectedDate}\nTime: ${selectedSlot}\nAmount: ৳${selectedAmount}`;
         const url = `https://wa.me/${whatsapp.replace('+', '').replace(' ', '')}?text=${encodeURIComponent(message)}`;
         window.open(url, '_blank');
+    }
+
+    function showBookingDisabledAlert() {
+        alert("Online bookings are currently disabled for this location. Please contact admin or call/whatsapp us to book this slot.");
     }
 </script>
 {% endblock %}
