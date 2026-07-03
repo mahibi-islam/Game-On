@@ -352,17 +352,6 @@ def update_booking(booking_id, action):
     if action == 'approve':
         Booking.update(booking_id, {'status': 'approved'})
     elif action == 'cancel':
-        # Prevent cancelling if slot already passed
-        slot = Slot.find_by_id(booking.get('time_slot')) if booking.get('time_slot') else None
-        if slot and booking.get('date'):
-            try:
-                start_part = slot['time'].split('-')[0]
-                h, m = [int(x) for x in start_part.split(':')]
-                slot_start = datetime.strptime(booking['date'], '%Y-%m-%d').replace(hour=h, minute=m, second=0, microsecond=0, tzinfo=get_bangladesh_tz())
-                if get_bangladesh_now() >= slot_start:
-                    return jsonify({'error': 'Cannot cancel a past slot'}), 400
-            except Exception:
-                pass
         Booking.update(booking_id, {'status': 'cancelled'})
     elif action == 'paid':
         Booking.update(booking_id, {'status': 'paid'})
