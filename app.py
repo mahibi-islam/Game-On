@@ -1,4 +1,4 @@
-from flask import Flask, Response
+from flask import Flask, Response, send_from_directory
 import os
 from db import mongo
 
@@ -47,6 +47,11 @@ def create_app(config_name='development'):
         settings = Settings.find_one()
         active_locations = Location.find_all({'enabled': True})
         return dict(settings=settings, active_locations=active_locations)
+
+    # ── Google Search & Browser Favicon Route ──
+    @app.route('/favicon.ico')
+    def favicon():
+        return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
     
     # ── Security: security.txt (RFC 9116) ──
     @app.route('/.well-known/security.txt')

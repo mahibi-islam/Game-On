@@ -5,6 +5,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}GAME ON {% endblock %}</title>
+
+    <!-- Favicons & Touch Icons for Google Search and Browsers -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/logo.png') }}">
+
+    <!-- Open Graph & Social Meta Tags -->
+    <meta property="og:title" content="GAME ON - Premium Turf Booking">
+    <meta property="og:description" content="Welcome TO GAME ON. Premium multi-location turf booking platform with instant confirmation.">
+    <meta property="og:image" content="{{ url_for('static', filename='images/logo.png', _external=True) }}">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ url_for('static', filename='images/logo.png', _external=True) }}">
+
+    <!-- Schema.org Structured Data for Google Search Logo Snippet -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "GAME ON",
+      "url": "https://gameon.bd",
+      "logo": "{{ url_for('static', filename='images/logo.png', _external=True) }}"
+    }
+    </script>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modern.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -19,7 +45,7 @@
         <div class="container">
             <div class="nav-brand">
                 <a href="{{ url_for('user.index') }}">
-                    <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="GAME ON"
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="GAME ON"
                         class="nav-logo">
 
                 </a>
