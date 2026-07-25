@@ -349,14 +349,27 @@ def update_booking(booking_id, action):
     if not booking:
         return jsonify({'error': 'Booking not found'}), 404
     
+    target_status = None
     if action == 'approve':
-        Booking.update(booking_id, {'status': 'approved'})
+        target_status = 'approved'
     elif action == 'cancel':
-        Booking.update(booking_id, {'status': 'cancelled'})
+        target_status = 'cancelled'
     elif action == 'paid':
-        Booking.update(booking_id, {'status': 'paid'})
+        target_status = 'paid'
     elif action == 'pending':
-        Booking.update(booking_id, {'status': 'pending'})
+        target_status = 'pending'
+    
+    if target_status and target_status in ['approved', 'paid', 'pending']:
+        existing = Booking.find_by_date_and_slot(
+            booking.get('date'),
+            booking.get('time_slot'),
+            exclude_booking_id=booking_id
+        )
+        if existing:
+            return jsonify({'error': 'Cannot change status: This slot is already booked for this date by another active booking.'}), 400
+
+    if target_status:
+        Booking.update(booking_id, {'status': target_status})
     
     return jsonify({'success': True})
 
@@ -373,9 +386,34 @@ def create_manual_booking():
             flash('Invalid time slot', 'error')
             return redirect(url_for('admin.create_manual_booking'))
         
+        # Check if slot is already booked for the selected date
+        existing = Booking.find_by_date_and_slot(data.get('date'), data.get('time_slot'))
+        if existing:
+            flash('This slot is already booked for the selected date.', 'error')
+            return redirect(url_for('admin.create_manual_booking'))
+        
+        # Ensure rate type matches date (weekend vs weekday)
+        try:
+            date_obj = datetime.strptime(data.get('date'), '%Y-%m-%d')
+            is_weekend = date_obj.weekday() in [4, 5]
+            expected_rate = 'weekend' if is_weekend else 'weekday'
+            if slot.get('rate_type', 'weekday') != expected_rate:
+                loc_id = slot.get('location_id') or (ObjectId(data.get('location_id')) if data.get('location_id') and len(data.get('location_id')) == 24 else None)
+                matching = Slot.get_collection().find_one({
+                    'location_id': loc_id,
+                    'sport': slot.get('sport'),
+                    'time': slot.get('time'),
+                    'rate_type': expected_rate,
+                    'enabled': True
+                })
+                if matching:
+                    slot = matching
+        except Exception as e:
+            print(f"Rate type matching warning: {e}")
+
         booking_data = {
             'date': data.get('date'),
-            'time_slot': data.get('time_slot'),
+            'time_slot': str(slot['_id']),
             'location_id': str(slot.get('location_id')) if slot.get('location_id') else data.get('location_id'),
             'name': data.get('name'),
             'phone': data.get('phone'),

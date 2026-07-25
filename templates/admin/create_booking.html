@@ -30,7 +30,7 @@
         </div>
 
         <div class="form-group">
-            <label for="date">Date *</label>
+            <label for="date">Date * <span id="rate-type-badge" style="margin-left: 10px; font-size: 0.85em; padding: 3px 10px; border-radius: 4px; font-weight: bold; display: none;"></span></label>
             <input type="date" id="date" name="date" class="form-control" required>
         </div>
         
@@ -94,6 +94,7 @@
             time: "{{ slot.time }}",
             price: "{{ slot.price }}",
             sport: "{{ slot.sport|title }}",
+            rateType: "{{ slot.rate_type|default('weekday') }}",
             locationId: "{{ slot.location_id }}"
         },
         {% endfor %}
@@ -101,8 +102,44 @@
     
     // Minimum date is today
     document.getElementById('date').min = new Date().toISOString().split('T')[0];
+    document.getElementById('date').addEventListener('change', function() {
+        const locId = document.getElementById('location_id').value;
+        filterSlots(locId, currentSport);
+    });
 
     let currentSport = 'Football';
+
+    function getRateTypeForDate(dateStr) {
+        if (!dateStr) return null;
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            const year = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const day = parseInt(parts[2], 10);
+            const dateObj = new Date(year, month, day);
+            const dayOfWeek = dateObj.getDay(); // 0: Sun, 1: Mon, 2: Tue, 3: Wed, 4: Thu, 5: Fri, 6: Sat
+            return (dayOfWeek === 5 || dayOfWeek === 6) ? 'weekend' : 'weekday';
+        }
+        return 'weekday';
+    }
+
+    function updateRateTypeBadge(rateType) {
+        const badge = document.getElementById('rate-type-badge');
+        if (!rateType) {
+            badge.style.display = 'none';
+            return;
+        }
+        badge.style.display = 'inline-block';
+        if (rateType === 'weekend') {
+            badge.style.backgroundColor = '#e74c3c';
+            badge.style.color = '#ffffff';
+            badge.innerHTML = '<i class="fas fa-calendar-week"></i> Weekend Rates';
+        } else {
+            badge.style.backgroundColor = '#2ecc71';
+            badge.style.color = '#ffffff';
+            badge.innerHTML = '<i class="fas fa-calendar-day"></i> Normal Day Rates';
+        }
+    }
 
     function selectSport(sport) {
         currentSport = sport;
@@ -133,22 +170,73 @@
         
         if (!locId) {
             slotSelect.innerHTML = '<option value="">Select Location first</option>';
+            updateRateTypeBadge(null);
             return;
         }
         
-        const filtered = allSlots.filter(s => s.locationId === locId && s.sport.toLowerCase() === sport.toLowerCase());
+        const selectedDate = document.getElementById('date').value;
+        const rateType = getRateTypeForDate(selectedDate);
+        updateRateTypeBadge(rateType);
+
+        let filtered = allSlots.filter(s => s.locationId === locId && s.sport.toLowerCase() === sport.toLowerCase());
+        if (rateType) {
+            filtered = filtered.filter(s => (s.rateType || 'weekday') === rateType);
+        }
         
         if (filtered.length === 0) {
-            slotSelect.innerHTML = `<option value="">No ${sport} slots configured for this location</option>`;
+            const label = rateType ? (rateType === 'weekend' ? 'Weekend' : 'Normal Day') : '';
+            slotSelect.innerHTML = `<option value="">No ${label} ${sport} slots configured for this location</option>`;
             return;
         }
-        
-        filtered.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s.id;
-            opt.textContent = `${s.time} - ৳${s.price}`;
-            slotSelect.appendChild(opt);
-        });
+
+        if (selectedDate) {
+            slotSelect.innerHTML = '<option value="">Loading availability...</option>';
+            fetch(`/api/availability/${selectedDate}?sport=${sport.toLowerCase()}&location_id=${locId}`)
+                .then(res => res.json())
+                .then(availability => {
+                    slotSelect.innerHTML = '<option value="">Select Time Slot</option>';
+                    const availMap = {};
+                    if (Array.isArray(availability)) {
+                        availability.forEach(item => {
+                            availMap[item._id] = item;
+                        });
+                    }
+                    filtered.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id;
+                        const statusInfo = availMap[s.id];
+                        const price = statusInfo ? statusInfo.price : s.price;
+                        const discountInfo = (statusInfo && statusInfo.discount_active) ? ` (${statusInfo.discount_percent}% OFF)` : '';
+                        
+                        if (statusInfo && (statusInfo.is_booked || statusInfo.is_pending)) {
+                            const statusLabel = statusInfo.is_booked ? 'Booked' : 'Pending';
+                            opt.textContent = `${s.time} - ৳${price}${discountInfo} (${statusLabel})`;
+                            opt.disabled = true;
+                            opt.style.color = '#888';
+                        } else {
+                            opt.textContent = `${s.time} - ৳${price}${discountInfo}`;
+                        }
+                        slotSelect.appendChild(opt);
+                    });
+                })
+                .catch(err => {
+                    console.error('Error fetching availability:', err);
+                    slotSelect.innerHTML = '<option value="">Select Time Slot</option>';
+                    filtered.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id;
+                        opt.textContent = `${s.time} - ৳${s.price}`;
+                        slotSelect.appendChild(opt);
+                    });
+                });
+        } else {
+            filtered.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = `${s.time} - ৳${s.price}`;
+                slotSelect.appendChild(opt);
+            });
+        }
     }
 </script>
 {% endblock %}
