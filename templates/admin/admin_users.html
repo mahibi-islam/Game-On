@@ -1,0 +1,203 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Admin Users - Admin Panel{% endblock %}
+{% block page_title %}Admin Users Management{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+    <div>
+        <p style="color: var(--text-color); margin: 0;">Manage Super Admin and Turf Branch Admin accounts with scoped permissions.</p>
+    </div>
+    <button onclick="openCreateAdminModal()" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+        <i class="fas fa-user-plus"></i> Add New Admin
+    </button>
+</div>
+
+<div class="table-container">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Full Name</th>
+                <th>Role</th>
+                <th>Assigned Branch</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for admin in admins %}
+            <tr>
+                <td style="font-weight: bold; color: var(--primary-color);">
+                    <i class="fas {% if admin.role == 'superadmin' %}fa-user-shield{% else %}fa-user{% endif %}" style="margin-right: 6px;"></i>
+                    {{ admin.username }}
+                </td>
+                <td>{{ admin.full_name or admin.username }}</td>
+                <td>
+                    {% if admin.role == 'superadmin' %}
+                    <span class="status-badge" style="background: rgba(142, 68, 173, 0.2); color: #9b59b6; border: 1px solid #9b59b6;">Super Admin</span>
+                    {% else %}
+                    <span class="status-badge" style="background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid #3498db;">Branch Admin</span>
+                    {% endif %}
+                </td>
+                <td style="font-weight: bold;">
+                    {% if admin.role == 'superadmin' %}
+                    <span style="color: #2ecc71;"><i class="fas fa-globe"></i> All Venues (Global)</span>
+                    {% else %}
+                    <span style="color: var(--primary-color);"><i class="fas fa-map-marker-alt"></i> {{ admin.location_name }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if admin.created_at %}
+                        {{ admin.created_at.strftime('%Y-%m-%d') if admin.created_at.strftime is defined else admin.created_at }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="action-buttons">
+                        <button onclick="openEditAdminModal('{{ admin._id }}', '{{ admin.username }}', '{{ admin.full_name or '' }}', '{{ admin.role }}', '{{ admin.location_id or '' }}')" class="btn btn-sm btn-primary" title="Edit Admin">
+                            <i class="fas fa-edit"></i> Edit / Reset Password
+                        </button>
+                        {% if admin.username != session.get('admin_username') %}
+                        <form action="{{ url_for('admin.delete_admin_user', admin_id=admin._id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete admin account {{ admin.username }}?');">
+                            <button type="submit" class="btn btn-sm btn-danger" title="Delete Admin">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Create Admin Modal -->
+<div id="createAdminModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeCreateAdminModal()">&times;</span>
+        <h2>Add New Admin User</h2>
+        <form method="POST" action="{{ url_for('admin.create_admin_user') }}" style="margin-top: 15px;">
+            <div class="form-group">
+                <label for="new_username">Username *</label>
+                <input type="text" id="new_username" name="username" class="form-control" placeholder="e.g. admin_bogura" required>
+            </div>
+            <div class="form-group">
+                <label for="new_full_name">Full Name</label>
+                <input type="text" id="new_full_name" name="full_name" class="form-control" placeholder="e.g. Bogura Turf Manager">
+            </div>
+            <div class="form-group">
+                <label for="new_password">Password *</label>
+                <input type="password" id="new_password" name="password" class="form-control" placeholder="Enter secure password" required>
+            </div>
+            <div class="form-group">
+                <label for="new_role">Role *</label>
+                <select id="new_role" name="role" class="form-control" onchange="toggleLocationField('new')" required>
+                    <option value="branch_admin">Branch Admin (Restricted to single venue)</option>
+                    <option value="superadmin">Super Admin (Access to all venues)</option>
+                </select>
+            </div>
+            <div class="form-group" id="new_location_group">
+                <label for="new_location_id">Assigned Turf Location *</label>
+                <select id="new_location_id" name="location_id" class="form-control">
+                    {% for loc in locations %}
+                    <option value="{{ loc._id }}">{{ loc.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-actions" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="closeCreateAdminModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Admin</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Admin Modal -->
+<div id="editAdminModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeEditAdminModal()">&times;</span>
+        <h2 id="editModalTitle">Edit Admin Account</h2>
+        <form id="editAdminForm" method="POST" action="" style="margin-top: 15px;">
+            <div class="form-group">
+                <label for="edit_full_name">Full Name</label>
+                <input type="text" id="edit_full_name" name="full_name" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="edit_role">Role *</label>
+                <select id="edit_role" name="role" class="form-control" onchange="toggleLocationField('edit')" required>
+                    <option value="branch_admin">Branch Admin (Restricted to single venue)</option>
+                    <option value="superadmin">Super Admin (Access to all venues)</option>
+                </select>
+            </div>
+            <div class="form-group" id="edit_location_group">
+                <label for="edit_location_id">Assigned Turf Location</label>
+                <select id="edit_location_id" name="location_id" class="form-control">
+                    {% for loc in locations %}
+                    <option value="{{ loc._id }}">{{ loc.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="border-top: 1px solid var(--border-color); padding-top: 15px; margin-top: 15px;">
+                <label for="edit_new_password">Reset Password (leave blank to keep unchanged)</label>
+                <input type="password" id="edit_new_password" name="new_password" class="form-control" placeholder="Enter new password">
+            </div>
+            <div class="form-actions" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="closeEditAdminModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleLocationField(prefix) {
+    const role = document.getElementById(`${prefix}_role`).value;
+    const locGroup = document.getElementById(`${prefix}_location_group`);
+    if (role === 'superadmin') {
+        locGroup.style.display = 'none';
+    } else {
+        locGroup.style.display = 'block';
+    }
+}
+
+function openCreateAdminModal() {
+    toggleLocationField('new');
+    document.getElementById('createAdminModal').style.display = 'block';
+}
+
+function closeCreateAdminModal() {
+    document.getElementById('createAdminModal').style.display = 'none';
+}
+
+function openEditAdminModal(adminId, username, fullName, role, locationId) {
+    document.getElementById('editModalTitle').textContent = `Edit Admin: ${username}`;
+    document.getElementById('editAdminForm').action = `/admin/users/${adminId}/update`;
+    document.getElementById('edit_full_name').value = fullName;
+    document.getElementById('edit_role').value = role || 'branch_admin';
+    if (locationId) {
+        document.getElementById('edit_location_id').value = locationId;
+    }
+    document.getElementById('edit_new_password').value = '';
+    toggleLocationField('edit');
+    document.getElementById('editAdminModal').style.display = 'block';
+}
+
+function closeEditAdminModal() {
+    document.getElementById('editAdminModal').style.display = 'none';
+}
+
+window.onclick = function(event) {
+    if (event.target == document.getElementById('createAdminModal')) {
+        closeCreateAdminModal();
+    }
+    if (event.target == document.getElementById('editAdminModal')) {
+        closeEditAdminModal();
+    }
+}
+</script>
+{% endblock %}

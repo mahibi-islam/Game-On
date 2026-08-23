@@ -73,12 +73,15 @@ function renderCalendar() {
     }
 }
 
+const currentLocId = "{{ current_location_id }}";
+
 function loadDayBookings(date, dayCell) {
-    fetch(`/api/availability/${date}`)
+    const url = currentLocId ? `/api/availability/${date}?location_id=${currentLocId}` : `/api/availability/${date}`;
+    fetch(url)
         .then(res => res.json())
         .then(data => {
-            const booked = data.filter(s => !s.available).length;
-            const total = data.length;
+            const booked = Array.isArray(data) ? data.filter(s => !s.available).length : 0;
+            const total = Array.isArray(data) ? data.length : 0;
             
             if (booked > 0) {
                 dayCell.classList.add('has-bookings');

@@ -92,7 +92,15 @@ def login():
                 admin = None
         if admin and Admin.verify_password(admin, password):
             session['admin_logged_in'] = True
-            session['admin_username'] = identifier
+            session['admin_username'] = admin.get('username', identifier)
+            session['admin_role'] = admin.get('role', 'branch_admin' if admin.get('location_id') else 'superadmin')
+            session['admin_location_id'] = str(admin['location_id']) if admin.get('location_id') else None
+            if admin.get('location_id'):
+                from models.location import Location
+                loc = Location.find_by_id(str(admin['location_id']))
+                session['admin_location_name'] = loc.get('name') if loc else None
+            else:
+                session['admin_location_name'] = None
             return redirect(url_for('admin.dashboard'))
 
         flash('Invalid login credentials', 'error')

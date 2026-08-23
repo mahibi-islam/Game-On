@@ -10,12 +10,18 @@
 
     <div style="display: flex; align-items: center; gap: 10px;">
         <label for="filter-location-select" style="font-weight: bold; color: var(--primary-color); margin: 0;"><i class="fas fa-filter"></i> Venue Branch:</label>
+        {% if is_branch_admin %}
+        <span style="font-weight: bold; background: rgba(46, 204, 113, 0.15); color: #2ecc71; padding: 6px 12px; border-radius: 5px; border: 1px solid #2ecc71;">
+            <i class="fas fa-map-marker-alt"></i> {{ locations[0].name if locations else 'Assigned Branch' }}
+        </span>
+        {% else %}
         <select id="filter-location-select" class="form-control" onchange="filterBookingsByLocation(this.value)" style="width: auto; min-width: 200px;">
             <option value="all" {% if selected_location_id == 'all' %}selected{% endif %}>All Branches</option>
             {% for loc in locations %}
             <option value="{{ loc._id }}" {% if selected_location_id|string == loc._id|string %}selected{% endif %}>{{ loc.name }}</option>
             {% endfor %}
         </select>
+        {% endif %}
     </div>
 
     <div class="filter-tabs">

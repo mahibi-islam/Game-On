@@ -8,12 +8,19 @@
     <form method="POST" class="admin-form">
         <div class="form-group">
             <label for="location_id">Select Location Venue *</label>
+            {% if is_branch_admin and locations %}
+            <input type="hidden" id="location_id" name="location_id" value="{{ locations[0]._id }}">
+            <div style="font-weight: bold; background: rgba(46, 204, 113, 0.15); color: #2ecc71; padding: 10px 14px; border-radius: 5px; border: 1px solid #2ecc71; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-map-marker-alt"></i> {{ locations[0].name }} (Assigned Venue)
+            </div>
+            {% else %}
             <select id="location_id" name="location_id" class="form-control" onchange="filterSlotsByLocation(this.value)" required>
                 <option value="">Select Location</option>
                 {% for loc in locations %}
                 <option value="{{ loc._id }}">{{ loc.name }}</option>
                 {% endfor %}
             </select>
+            {% endif %}
         </div>
 
         <div class="form-group">
@@ -238,5 +245,13 @@
             });
         }
     }
+
+    // Auto-filter slots on load if location is already set (e.g. for branch admins)
+    document.addEventListener('DOMContentLoaded', function() {
+        const locEl = document.getElementById('location_id');
+        if (locEl && locEl.value) {
+            filterSlots(locEl.value, currentSport);
+        }
+    });
 </script>
 {% endblock %}
