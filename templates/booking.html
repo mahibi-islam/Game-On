@@ -353,6 +353,7 @@
                 }
 
                  container.innerHTML = data.map(slot => {
+                    const slotLabel = slot.venue ? `${slot.time} (${slot.venue})` : slot.time;
                     let statusClass = 'available';
                     let statusText = 'Available';
 
@@ -373,9 +374,10 @@
                     return `
                     <div class="slot-card ${statusClass}" 
                           data-slot-id="${slot._id}" 
-                          data-time="${slot.time}" 
+                          data-time="${slotLabel}" 
                           data-price="${slot.price}"
-                          onclick="${slot.available ? (slot.online_booking_enabled ? `selectSlot('${slot._id}', '${slot.time}', ${slot.price}, ${slot.discount_active}, ${slot.discount_percent})` : `showBookingDisabledAlert('${slot.phone}')`) : ''}">
+                          onclick="${slot.available ? (slot.online_booking_enabled ? `selectSlot('${slot._id}', '${slotLabel}', ${slot.price}, ${slot.discount_active}, ${slot.discount_percent})` : `showBookingDisabledAlert('${slot.phone}')`) : ''}">
+                        ${slot.venue ? `<div class="slot-venue" style="font-size: 0.75em; font-weight: 600; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.5px;">${slot.venue}</div>` : ''}
                         <div class="slot-time">${slot.time}</div>
                         <div class="slot-price">
                             ${slot.discount_active ?
@@ -393,7 +395,7 @@
                 if (preselectedSlotId) {
                     const foundSlot = data.find(s => s._id === preselectedSlotId);
                     if (foundSlot && foundSlot.available && foundSlot.online_booking_enabled) {
-                        selectSlot(foundSlot._id, foundSlot.time, foundSlot.price, foundSlot.discount_active, foundSlot.discount_percent);
+                        selectSlot(foundSlot._id, foundSlot.venue ? `${foundSlot.time} (${foundSlot.venue})` : foundSlot.time, foundSlot.price, foundSlot.discount_active, foundSlot.discount_percent);
                         preselectedSlotId = '';
                         setTimeout(() => {
                             goToStep(5);

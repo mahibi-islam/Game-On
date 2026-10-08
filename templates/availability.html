@@ -333,7 +333,7 @@
 
                     return `
                     <tr>
-                        <td>${slot.time}</td>
+                        <td>${slot.time}${slot.venue ? ` <span style="color: var(--primary-color); font-weight: 600;">(${slot.venue})</span>` : ''}</td>
                         <td>
                             ${slot.discount_active ?
                             `<span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳${slot.price}</span>

@@ -98,7 +98,7 @@
         {% for slot in slots %}
         {
             id: "{{ slot._id }}",
-            time: "{{ slot.time }}",
+            time: "{{ slot.time }}{% if slot.venue %} ({{ slot.venue }}){% endif %}",
             price: "{{ slot.price }}",
             sport: "{{ slot.sport|title }}",
             rateType: "{{ slot.rate_type|default('weekday') }}",

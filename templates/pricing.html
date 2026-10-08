@@ -118,7 +118,7 @@
                                     {% endif %}
                                 {% endfor %}
                             </td>
-                            <td>{{ slot.time }}</td>
+                            <td>{{ slot.time }}{% if slot.venue %} ({{ slot.venue }}){% endif %}</td>
                             <td class="price-cell">
                                 {% if slot.discount_active %}
                                 <span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳{{
@@ -160,7 +160,7 @@
                                     {% endif %}
                                 {% endfor %}
                             </td>
-                            <td>{{ slot.time }}</td>
+                            <td>{{ slot.time }}{% if slot.venue %} ({{ slot.venue }}){% endif %}</td>
                             <td class="price-cell">
                                 {% if slot.discount_active %}
                                 <span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳{{
@@ -211,7 +211,7 @@
                                     {% endif %}
                                 {% endfor %}
                             </td>
-                            <td>{{ slot.time }}</td>
+                            <td>{{ slot.time }}{% if slot.venue %} ({{ slot.venue }}){% endif %}</td>
                             <td class="price-cell">
                                 {% if slot.discount_active %}
                                 <span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳{{
@@ -253,7 +253,7 @@
                                     {% endif %}
                                 {% endfor %}
                             </td>
-                            <td>{{ slot.time }}</td>
+                            <td>{{ slot.time }}{% if slot.venue %} ({{ slot.venue }}){% endif %}</td>
                             <td class="price-cell">
                                 {% if slot.discount_active %}
                                 <span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳{{

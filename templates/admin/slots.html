@@ -32,6 +32,7 @@
                 <thead>
                     <tr>
                         <th>Location</th>
+                        <th>Venue</th>
                         <th>Time Slot</th>
                         <th>Price (BDT)</th>
                         <th>Rate Type</th>
@@ -49,6 +50,7 @@
                                 {% endif %}
                             {% endfor %}
                         </td>
+                        <td>{{ slot.venue or '—' }}</td>
                         <td>{{ slot.time }}</td>
                         <td>
                             {% if slot.discount_active %}
@@ -73,7 +75,8 @@
                         </td>
                         <td>
                             <button
-                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'football', '{{ slot.rate_type|default('weekday') }}', '{{ slot.location_id }}')"
+                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'football', '{{ slot.rate_type|default('weekday') }}', '{{ slot.location_id }}', this.dataset.venue)"
+                                data-venue="{{ slot.venue or '' }}"
                                 class="btn btn-sm btn-primary">Edit</button>
                         </td>
                     </tr>
@@ -90,6 +93,7 @@
                 <thead>
                     <tr>
                         <th>Location</th>
+                        <th>Venue</th>
                         <th>Time Slot</th>
                         <th>Price (BDT)</th>
                         <th>Rate Type</th>
@@ -107,6 +111,7 @@
                                 {% endif %}
                             {% endfor %}
                         </td>
+                        <td>{{ slot.venue or '—' }}</td>
                         <td>{{ slot.time }}</td>
                         <td>
                             {% if slot.discount_active %}
@@ -131,7 +136,8 @@
                         </td>
                         <td>
                             <button
-                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'badminton', '{{ slot.rate_type|default('weekday') }}', '{{ slot.location_id }}')"
+                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'badminton', '{{ slot.rate_type|default('weekday') }}', '{{ slot.location_id }}', this.dataset.venue)"
+                                data-venue="{{ slot.venue or '' }}"
                                 class="btn btn-sm btn-primary">Edit</button>
                         </td>
                     </tr>
@@ -163,6 +169,10 @@
                     {% endfor %}
                 </select>
                 {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="slot-venue">Venue (only for locations with more than one turf, e.g. Venue 2)</label>
+                <input type="text" id="slot-venue" class="form-control" placeholder="Leave blank for single-venue locations">
             </div>
             <div class="form-group">
                 <label for="slot-sport">Sport *</label>
@@ -235,6 +245,7 @@
         if(document.getElementById('slot-location').options.length > 0) {
             document.getElementById('slot-location').selectedIndex = 0;
         }
+        document.getElementById('slot-venue').value = '';
         document.getElementById('slot-sport').value = 'football';
         document.getElementById('slot-rate-type').value = 'weekday';
         document.getElementById('slot-time').value = '';
@@ -245,13 +256,14 @@
         document.getElementById('slotModal').style.display = 'block';
     }
 
-    function editSlot(slotId, time, price, enabled, discountActive, discountPercent, sport, rateType, locationId) {
+    function editSlot(slotId, time, price, enabled, discountActive, discountPercent, sport, rateType, locationId, venue) {
         editingSlotId = slotId;
         document.getElementById('modal-title').textContent = 'Edit Slot';
         document.getElementById('slot-id').value = slotId;
         if(locationId && document.getElementById('slot-location')) {
             document.getElementById('slot-location').value = locationId;
         }
+        document.getElementById('slot-venue').value = venue || '';
         document.getElementById('slot-sport').value = sport || 'football';
         document.getElementById('slot-rate-type').value = rateType || 'weekday';
         document.getElementById('slot-time').value = time;
@@ -271,6 +283,7 @@
 
         const data = {
             location_id: document.getElementById('slot-location').value,
+            venue: document.getElementById('slot-venue').value.trim(),
             sport: document.getElementById('slot-sport').value,
             rate_type: document.getElementById('slot-rate-type').value,
             time: document.getElementById('slot-time').value,

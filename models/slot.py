@@ -1,5 +1,6 @@
 from db import mongo
 from bson import ObjectId
+from utils.slot_utils import get_bangladesh_now
 
 class Slot:
     """Time slot model"""
@@ -22,6 +23,9 @@ class Slot:
             'discount_percent': float(data.get('discount_percent', 0.0)),
             'location_id': ObjectId(data.get('location_id')) if data.get('location_id') else None
         }
+        venue = (data.get('venue') or '').strip()
+        if venue:
+            slot_data['venue'] = venue
         result = Slot.get_collection().insert_one(slot_data)
         slot_data['_id'] = str(result.inserted_id)
         if slot_data.get('location_id'):
@@ -58,10 +62,18 @@ class Slot:
         if 'discount_percent' in data: update_data['discount_percent'] = float(data['discount_percent'])
         if 'location_id' in data: 
             update_data['location_id'] = ObjectId(data['location_id']) if data['location_id'] else None
+
+        update_ops = {'$set': update_data}
+        if 'venue' in data:
+            venue = (data['venue'] or '').strip()
+            if venue:
+                update_data['venue'] = venue
+            else:
+                update_ops['$unset'] = {'venue': ''}
         
         return Slot.get_collection().update_one(
             {'_id': ObjectId(slot_id)},
-            {'$set': update_data}
+            update_ops
         )
     
     @staticmethod
@@ -196,4 +208,118 @@ class Slot:
                     Slot.get_collection().insert_many(badminton_weekend)
                     print(f"Initialized default weekend slots for location: {loc['name']}")
 
+        Slot.init_khulna_schedule(locs)
 
+    # GAME ON KHULNA football schedule (both venues share it): time -> (weekday, weekend) price.
+    # Weekday = Sunday-Thursday, weekend = Friday-Saturday.
+    KHULNA_VENUES = ['Venue 1', 'Venue 2']
+    KHULNA_FOOTBALL_PRICES = [
+        ('06:00-07:30', 2200, 2400),
+        ('07:30-09:00', 2200, 2400),
+        ('09:00-10:30', 2200, 2400),
+        ('10:30-12:00', 2200, 2400),
+        ('12:00-13:30', 2000, 2200),
+        ('13:30-15:00', 2000, 2200),
+        ('15:00-16:30', 2000, 2200),
+        ('16:30-18:00', 2800, 3000),
+        ('18:00-19:30', 2800, 3000),
+        ('19:30-21:00', 2800, 3000),
+        ('21:00-22:30', 2800, 3000),
+        ('22:30-00:00', 2800, 3000),
+        ('00:00-01:30', 2800, 3000),
+        ('01:30-03:00', 2800, 3000),
+        ('03:00-04:30', 2400, 2400),
+        ('04:30-06:00', 2400, 2400),
+    ]
+
+    @staticmethod
+    def init_khulna_schedule(locs):
+        """One-time migration: GAME ON KHULNA runs two football venues with the
+        same 90-minute slots and pricing (KHULNA_FOOTBALL_PRICES).
+
+        Existing slots are matched by start/end time (so '6:00 - 7:30' matches
+        '06:00-07:30') and updated in place, keeping their IDs so bookings still
+        resolve. Duplicate slots have their bookings moved onto the kept slot.
+        Missing slots are created; leftover football slots are disabled, not deleted."""
+        from db import mongo
+        from pymongo.errors import DuplicateKeyError
+        from utils.slot_utils import parse_time_to_minutes
+
+        khulna = next((l for l in locs if 'khulna' in l.get('name', '').lower()), None)
+        if not khulna:
+            return
+
+        # Claim the migration atomically so concurrent gunicorn workers don't both run it
+        migration_id = 'khulna_two_venue_schedule'
+        try:
+            mongo.db.migrations.insert_one({'_id': migration_id})
+        except DuplicateKeyError:
+            return
+
+        try:
+            Slot._apply_khulna_schedule(mongo, khulna, parse_time_to_minutes)
+        except Exception:
+            mongo.db.migrations.delete_one({'_id': migration_id})  # retry on next start
+            raise
+
+    @staticmethod
+    def _apply_khulna_schedule(mongo, khulna, parse_time_to_minutes):
+        loc_id = khulna['_id']
+        col = Slot.get_collection()
+        football = {'location_id': loc_id, 'sport': 'football'}
+
+        def span(time_str):
+            start, _, end = (time_str or '').partition('-')
+            return parse_time_to_minutes(start), parse_time_to_minutes(end)
+
+        # Existing single-venue slots become Venue 1
+        col.update_many({**football, 'venue': {'$exists': False}}, {'$set': {'venue': 'Venue 1'}})
+        existing = list(col.find(football))
+
+        def move_bookings(from_id, to_id):
+            mongo.db.bookings.update_many(
+                {'time_slot': {'$in': [from_id, str(from_id)]}},
+                {'$set': {'time_slot': str(to_id)}}
+            )
+
+        scheduled_ids = set()
+        created = 0
+        for venue in Slot.KHULNA_VENUES:
+            for time_str, weekday_price, weekend_price in Slot.KHULNA_FOOTBALL_PRICES:
+                for rate_type, price in (('weekday', weekday_price), ('weekend', weekend_price)):
+                    matches = [s for s in existing
+                               if s.get('venue') == venue
+                               and s.get('rate_type', 'weekday') == rate_type
+                               and s['_id'] not in scheduled_ids
+                               and span(s.get('time')) == span(time_str)]
+                    fields = {'time': time_str, 'price': float(price), 'enabled': True}
+                    if matches:
+                        # Prefer an exact, enabled match as the slot to keep
+                        matches.sort(key=lambda s: (s.get('time') != time_str, not s.get('enabled', True)))
+                        keep = matches[0]
+                        col.update_one({'_id': keep['_id']}, {'$set': fields})
+                        for dup in matches[1:]:
+                            move_bookings(dup['_id'], keep['_id'])
+                        scheduled_ids.add(keep['_id'])
+                    else:
+                        result = col.insert_one({
+                            **football, **fields, 'venue': venue, 'rate_type': rate_type,
+                            'discount_active': False, 'discount_percent': 0.0
+                        })
+                        scheduled_ids.add(result.inserted_id)
+                        created += 1
+
+        off_schedule = [s['_id'] for s in existing if s['_id'] not in scheduled_ids]
+        if off_schedule:
+            col.update_many({'_id': {'$in': off_schedule}}, {'$set': {'enabled': False}})
+            orphaned = mongo.db.bookings.count_documents({
+                'time_slot': {'$in': off_schedule + [str(i) for i in off_schedule]},
+                'status': {'$in': ['pending', 'approved', 'paid']},
+                'date': {'$gte': get_bangladesh_now().strftime('%Y-%m-%d')}
+            })
+            if orphaned:
+                print(f"WARNING: {orphaned} upcoming Khulna booking(s) are on slots outside the new "
+                      f"schedule (now disabled). Review them in Admin > Bookings.")
+
+        print(f"Applied Khulna two-venue football schedule for {khulna['name']}: "
+              f"{len(scheduled_ids)} slots ({created} new), {len(off_schedule)} off-schedule slots disabled")

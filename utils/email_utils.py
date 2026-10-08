@@ -179,7 +179,8 @@ def _send_booking_emails_sync(app, booking_data):
                 slot = Slot.find_by_id(str(slot_id))
             except Exception:
                 pass
-        slot_time = slot.get('time', 'N/A') if slot else 'N/A'
+        from utils.slot_utils import slot_label
+        slot_time = slot_label(slot)
         sport_name = slot.get('sport', 'N/A') if slot else 'N/A'
 
         # Fetch location details

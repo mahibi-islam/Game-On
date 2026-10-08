@@ -33,7 +33,7 @@
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Time Slot:</span>
-                    <span class="detail-value">{{ slot.time if slot else 'N/A' }}</span>
+                    <span class="detail-value">{{ slot.time if slot else 'N/A' }}{% if slot and slot.venue %} ({{ slot.venue }}){% endif %}</span>
                 </div>
                 <div class="detail-row">
                     <span class="detail-label">Name:</span>

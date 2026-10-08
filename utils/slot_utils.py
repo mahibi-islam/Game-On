@@ -52,6 +52,17 @@ def parse_time_to_minutes(time_str):
         except Exception:
             return 0
 
+def slot_label(slot, default='N/A'):
+    """
+    Display label for a slot: its time, plus the venue name when the
+    location has more than one venue (e.g. '06:00-07:30 (Venue 2)').
+    """
+    if not slot:
+        return default
+    time_str = slot.get('time', default)
+    venue = slot.get('venue')
+    return f"{time_str} ({venue})" if venue else time_str
+
 def sort_slots(slots, start_hour=6):
     """
     Sorts a list of slots starting from a specific hour (default 06:00 AM).
@@ -70,33 +81,35 @@ def sort_slots(slots, start_hour=6):
             return minutes + 1440
         return minutes
 
-    return sorted(slots, key=get_sort_key)
+    # Group by venue (stable sort keeps time order within each venue)
+    return sorted(sorted(slots, key=get_sort_key), key=lambda s: s.get('venue') or '')
+
+BUSINESS_DAY_START_HOUR = 6
+
+def rate_type_for_date(date_obj):
+    """'weekend' for Friday/Saturday (weekday() 4/5), otherwise 'weekday'."""
+    return 'weekend' if date_obj.weekday() in (4, 5) else 'weekday'
+
+def slot_start_datetime(date_str, slot_time_str, day_start_hour=BUSINESS_DAY_START_HOUR):
+    """
+    Actual start of a slot booked on `date_str`, in Bangladesh time.
+    A booking date is a business day running 06:00 -> 06:00, so slots that
+    start before 06:00 (e.g. '00:00-01:30') happen on the following calendar day.
+    """
+    start_minutes = parse_time_to_minutes(slot_time_str.split('-')[0].strip())
+    start = datetime.strptime(date_str, '%Y-%m-%d').replace(tzinfo=get_bangladesh_tz())
+    start += timedelta(minutes=start_minutes)
+    if start_minutes < day_start_hour * 60:
+        start += timedelta(days=1)
+    return start
 
 def is_past_slot(slot_time_str, date_str):
     """
-    Checks if a slot is in the past relative to Bangladesh Standard Time.
+    Checks if a slot has already started relative to Bangladesh Standard Time.
     slot_time_str: e.g., '06:00 AM - 07:30 AM' or '18:30 - 20:00'
     date_str: e.g., '2026-01-29'
     """
     try:
-        now_bst = get_bangladesh_now()
-        today_bst_str = now_bst.strftime('%Y-%m-%d')
-        
-        # If date is in the past, all slots are past
-        if date_str < today_bst_str:
-            return True
-        # If date is in the future, no slots are past
-        if date_str > today_bst_str:
-            return False
-            
-        # If date is today, check the start time
-        start_time_str = slot_time_str.split('-')[0].strip()
-        slot_minutes = parse_time_to_minutes(start_time_str)
-        
-        # Convert slot minutes to a datetime object for better comparison if needed,
-        # but simple minutes comparison is fine for "today".
-        now_minutes = now_bst.hour * 60 + now_bst.minute
-        
-        return slot_minutes < now_minutes
+        return slot_start_datetime(date_str, slot_time_str) < get_bangladesh_now()
     except Exception:
         return False

@@ -6,7 +6,7 @@ from models.user import get_current_user
 from db import mongo
 from datetime import datetime, timedelta
 from bson import ObjectId
-from utils.slot_utils import sort_slots, get_bangladesh_now, get_bangladesh_tz
+from utils.slot_utils import sort_slots, slot_label, slot_start_datetime, get_bangladesh_now
 
 user_bp = Blueprint('user', __name__)
 
@@ -120,7 +120,7 @@ def profile():
 
         # Attach slot time and location for readability
         slot = get_slot(booking.get('time_slot'))
-        booking_copy['slot_time'] = slot['time'] if slot else 'N/A'
+        booking_copy['slot_time'] = slot_label(slot)
 
         loc_id = booking.get('location_id') or (slot.get('location_id') if slot else None)
         location = get_location(loc_id)
@@ -132,10 +132,7 @@ def profile():
         slot_time_str = slot['time'] if slot else None
         if date_str and slot_time_str:
             try:
-                start_time_part = slot_time_str.split('-')[0]
-                start_hour, start_minute = [int(x) for x in start_time_part.split(':')]
-                slot_start_dt = datetime.strptime(date_str, '%Y-%m-%d')
-                slot_start_dt = slot_start_dt.replace(hour=start_hour, minute=start_minute, second=0, microsecond=0, tzinfo=get_bangladesh_tz())
+                slot_start_dt = slot_start_datetime(date_str, slot_time_str)
                 can_cancel = (slot_start_dt - now_bangladesh) >= timedelta(hours=48) and booking.get('status') != 'cancelled'
             except Exception:
                 can_cancel = False
@@ -144,9 +141,7 @@ def profile():
         # Display status: show 'played' if slot start is in the past and not cancelled
         try:
             if date_str and slot_time_str:
-                start_time_part = slot_time_str.split('-')[0]
-                start_hour, start_minute = [int(x) for x in start_time_part.split(':')]
-                slot_start_dt = datetime.strptime(date_str, '%Y-%m-%d').replace(hour=start_hour, minute=start_minute, second=0, microsecond=0, tzinfo=get_bangladesh_tz())
+                slot_start_dt = slot_start_datetime(date_str, slot_time_str)
                 if now_bangladesh >= slot_start_dt and booking.get('status') != 'cancelled':
                     booking_copy['status_display'] = 'played'
                 else:
@@ -189,14 +184,37 @@ def availability():
     """Availability page"""
     return render_template('availability.html')
 
+def merge_venue_rates(slots):
+    """Collapse slots that differ only by venue (same location, time, rate and price)
+    into a single pricing row; rows with venue-specific pricing keep their venue label."""
+    def rate_key(s):
+        return (str(s.get('location_id')), s.get('time'), s.get('rate_type', 'weekday'),
+                s.get('price'), bool(s.get('discount_active')), s.get('discount_percent', 0))
+
+    counts = {}
+    for s in slots:
+        counts[rate_key(s)] = counts.get(rate_key(s), 0) + 1
+
+    merged, seen = [], set()
+    for s in slots:
+        key = rate_key(s)
+        if key in seen:
+            continue
+        seen.add(key)
+        row = dict(s)
+        if counts[key] > 1:
+            row.pop('venue', None)
+        merged.append(row)
+    return merged
+
 @user_bp.route('/pricing')
 def pricing():
     """Pricing page"""
     football_slots = Slot.find_all({'enabled': True, 'sport': 'football'})
     badminton_slots = Slot.find_all({'enabled': True, 'sport': 'badminton'})
     
-    football_slots = sort_slots(football_slots)
-    badminton_slots = sort_slots(badminton_slots)
+    football_slots = sort_slots(merge_venue_rates(football_slots))
+    badminton_slots = sort_slots(merge_venue_rates(badminton_slots))
     
     preselected_location_id = request.args.get('location')
     
@@ -283,10 +301,7 @@ def cancel_booking(booking_id):
         return redirect(url_for('user.profile'))
 
     try:
-        start_time_part = slot['time'].split('-')[0]
-        start_hour, start_minute = [int(x) for x in start_time_part.split(':')]
-        slot_start_dt = datetime.strptime(date_str, '%Y-%m-%d')
-        slot_start_dt = slot_start_dt.replace(hour=start_hour, minute=start_minute, second=0, microsecond=0, tzinfo=get_bangladesh_tz())
+        slot_start_dt = slot_start_datetime(date_str, slot['time'])
     except Exception:
         flash('Unable to cancel this booking.', 'error')
         return redirect(url_for('user.profile'))

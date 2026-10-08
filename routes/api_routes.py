@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, session
 from datetime import datetime
 from models.slot import Slot
 from models.booking import Booking
-from utils.slot_utils import sort_slots
+from utils.slot_utils import sort_slots, rate_type_for_date, is_past_slot
 
 api_bp = Blueprint('api', __name__)
 
@@ -15,6 +15,7 @@ def get_slots():
     return jsonify([{
         '_id': str(slot['_id']),
         'time': slot['time'],
+        'venue': slot.get('venue'),
         'price': slot['price'],
         'sport': slot.get('sport', 'football'),
         'discount_active': slot.get('discount_active', False),
@@ -41,9 +42,7 @@ def get_availability(date):
             else:
                 return jsonify({'error': 'No active locations found'}), 400
         
-        # Friday is 4, Saturday is 5 in weekday() (Monday=0, Sunday=6)
-        is_weekend = date_obj.weekday() in [4, 5]
-        rate_type = 'weekend' if is_weekend else 'weekday'
+        rate_type = rate_type_for_date(date_obj)
         
         # Check if the requested location is the default (first active) location
         locs = Location.find_all({'enabled': True})
@@ -93,6 +92,7 @@ def get_availability(date):
             availability.append({
                 '_id': slot_id,
                 'time': slot['time'],
+                'venue': slot.get('venue'),
                 'price': slot['price'],
                 'sport': slot.get('sport', 'football'),
                 'discount_active': slot.get('discount_active', False),
@@ -121,26 +121,44 @@ def create_booking():
         if not session.get('user_logged_in'):
             return jsonify({'error': 'Authentication required. Please log in to book.'}), 401
 
-        data = request.json
+        data = request.get_json(silent=True) or {}
         date = data.get('date')
         time_slot = data.get('time_slot')
-        
+
+        # Validate the date
+        try:
+            date_obj = datetime.strptime(date or '', '%Y-%m-%d')
+        except ValueError:
+            return jsonify({'error': 'Invalid booking date'}), 400
+
+        # Get slot (price is always taken from the slot, never from the request)
+        try:
+            slot = Slot.find_by_id(time_slot)
+        except Exception:
+            slot = None
+        if not slot or not slot.get('enabled', True):
+            return jsonify({'error': 'Invalid time slot'}), 400
+
+        # The slot's rate must match the date (weekday vs. Friday/Saturday weekend pricing)
+        if slot.get('rate_type', 'weekday') != rate_type_for_date(date_obj):
+            return jsonify({'error': 'This time slot is not available on the selected date. Please pick the slot again.'}), 400
+
+        if is_past_slot(slot['time'], date):
+            return jsonify({'error': 'This time slot has already started or passed.'}), 400
+
         # Check if slot is already booked
         existing = Booking.find_by_date_and_slot(date, time_slot)
         if existing:
             return jsonify({'error': 'This slot is already booked'}), 400
-        
-        # Get slot price
-        slot = Slot.find_by_id(time_slot)
-        if not slot:
-            return jsonify({'error': 'Invalid time slot'}), 400
 
         # Verify online booking is enabled for the location
         from models.location import Location
         loc_id = slot.get('location_id')
         if loc_id:
             location = Location.find_by_id(str(loc_id))
-            if location and not location.get('online_booking_enabled', True):
+            if not location or not location.get('enabled', True):
+                return jsonify({'error': 'This location is not accepting bookings.'}), 400
+            if not location.get('online_booking_enabled', True):
                 return jsonify({'error': 'Online bookings are currently disabled for this location. Please contact admin to book.'}), 400
         
         booking_data = {

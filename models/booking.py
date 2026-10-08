@@ -1,7 +1,7 @@
 from db import mongo
 from datetime import datetime
 from bson import ObjectId
-from utils.slot_utils import get_bangladesh_now
+from utils.slot_utils import get_bangladesh_now, slot_label
 import openpyxl
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
@@ -272,7 +272,7 @@ class Booking:
                 print(f"Debug: Slot fetch error: {e}")
                 slot = None
         
-        slot_time = slot.get('time', 'N/A') if slot else 'N/A'
+        slot_time = slot_label(slot)
         
         # Resolve location name
         location_name = 'N/A'
@@ -364,7 +364,7 @@ class Booking:
             except Exception as e:
                 print(f"Debug: Slot fetch error during update: {e}")
                 slot = None
-        slot_time = slot.get('time', '') if slot else ''
+        slot_time = slot_label(slot, default='')
 
         # Resolve location name
         location_name = ''
@@ -453,7 +453,7 @@ class Booking:
             
             from models.slot import Slot
             slot = Slot.find_by_id(booking_data.get('time_slot'))
-            slot_time = slot.get('time', 'N/A') if slot else 'N/A'
+            slot_time = slot_label(slot)
             
             whatsapp_number = settings['whatsapp'].replace('+', '').replace(' ', '').replace('-', '')
             

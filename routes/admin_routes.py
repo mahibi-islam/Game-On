@@ -12,7 +12,7 @@ from models.booking import Booking
 from models.slot import Slot
 from models.settings import Settings
 from models.location import Location
-from utils.slot_utils import sort_slots, get_bangladesh_now, get_bangladesh_tz
+from utils.slot_utils import sort_slots, slot_label, slot_start_datetime, rate_type_for_date, get_bangladesh_now
 from db import mongo
 from werkzeug.utils import secure_filename
 
@@ -93,7 +93,7 @@ def export_bookings_to_excel(bookings_list, locations_map, slots_map):
         
     for b in bookings_list:
         slot = slots_map.get(str(b.get('time_slot'))) if b.get('time_slot') else None
-        slot_time = slot.get('time', 'N/A') if slot else 'N/A'
+        slot_time = slot_label(slot)
         loc_id = b.get('location_id') or (slot.get('location_id') if slot else None)
         loc = locations_map.get(str(loc_id)) if loc_id else None
         loc_name = loc.get('name', 'N/A') if loc else 'N/A'
@@ -283,7 +283,7 @@ def dashboard():
     for slot_data in popular_slots:
         slot = get_slot(slot_data['_id'])
         if slot:
-            slot_data['time'] = slot.get('time', 'N/A')
+            slot_data['time'] = slot_label(slot)
             slot_data['sport'] = slot.get('sport', 'N/A').title()
             loc_id = slot.get('location_id')
             loc = get_location(loc_id)
@@ -297,7 +297,7 @@ def dashboard():
     for booking in recent_bookings:
         slot_id = booking.get('time_slot')
         slot = get_slot(slot_id)
-        booking['slot_time'] = slot['time'] if slot else 'N/A'
+        booking['slot_time'] = slot_label(slot)
         loc_id = booking.get('location_id') or (slot.get('location_id') if slot else None)
         loc = get_location(loc_id)
         booking['location_name'] = loc.get('name', 'N/A') if loc else 'N/A'
@@ -317,7 +317,7 @@ def dashboard():
         if slot:
             time_str = slot.get('time', 'N/A')
             sport_name = slot.get('sport', 'football').title()
-            performance_labels.append(f"{time_str} ({sport_name})")
+            performance_labels.append(f"{slot_label(slot)} ({sport_name})")
             performance_values.append(item['count'])
             
             try:
@@ -435,7 +435,7 @@ def bookings():
     for booking in bookings_list:
         slot_id = booking.get('time_slot')
         slot = get_slot(slot_id)
-        booking['slot_time'] = slot['time'] if slot else 'N/A'
+        booking['slot_time'] = slot_label(slot)
         
         loc_id = booking.get('location_id') or (slot.get('location_id') if slot else None)
         loc = get_location(loc_id)
@@ -450,9 +450,7 @@ def bookings():
             status = booking.get('status')
             played = False
             if date_str and slot_time:
-                start_part = slot_time.split('-')[0]
-                h, m = [int(x) for x in start_part.split(':')]
-                slot_start = datetime.strptime(date_str, '%Y-%m-%d').replace(hour=h, minute=m, second=0, microsecond=0, tzinfo=get_bangladesh_tz())
+                slot_start = slot_start_datetime(date_str, slot_time)
                 played = now_bangladesh >= slot_start and status != 'cancelled'
             booking['status_display'] = 'played' if played else status
         except Exception:
@@ -541,14 +539,14 @@ def create_manual_booking():
         # Ensure rate type matches date (weekend vs weekday)
         try:
             date_obj = datetime.strptime(data.get('date'), '%Y-%m-%d')
-            is_weekend = date_obj.weekday() in [4, 5]
-            expected_rate = 'weekend' if is_weekend else 'weekday'
+            expected_rate = rate_type_for_date(date_obj)
             if slot.get('rate_type', 'weekday') != expected_rate:
                 loc_id_match = slot.get('location_id') or (ObjectId(location_id) if location_id and len(location_id) == 24 else None)
                 matching = Slot.get_collection().find_one({
                     'location_id': loc_id_match,
                     'sport': slot.get('sport'),
                     'time': slot.get('time'),
+                    'venue': slot.get('venue'),
                     'rate_type': expected_rate,
                     'enabled': True
                 })
@@ -654,7 +652,8 @@ def update_slot(slot_id):
         'rate_type': data.get('rate_type', 'weekday'),
         'enabled': data.get('enabled', True),
         'discount_active': data.get('discount_active', False),
-        'discount_percent': float(data.get('discount_percent', 0.0))
+        'discount_percent': float(data.get('discount_percent', 0.0)),
+        'venue': data.get('venue', '')
     }
     if not admin_loc_id and 'location_id' in data:
         update_dict['location_id'] = data['location_id']
@@ -779,7 +778,7 @@ def payments():
     for booking in bookings_list:
         slot_id = booking.get('time_slot')
         slot = slots_map.get(str(slot_id)) if slot_id else None
-        booking['slot_time'] = slot['time'] if slot else 'N/A'
+        booking['slot_time'] = slot_label(slot)
     return render_template('admin/payments.html', bookings=bookings_list)
 
 # ==================== Carousel Management ====================
