@@ -36,6 +36,11 @@
             <input type="hidden" id="selected_sport" name="sport" value="Football">
         </div>
 
+        <div class="form-group" id="venue-group" style="display: none;">
+            <label>Select Venue *</label>
+            <div id="venue-buttons" style="display: flex; gap: 10px; margin-top: 5px;"></div>
+        </div>
+
         <div class="form-group">
             <label for="date">Date * <span id="rate-type-badge" style="margin-left: 10px; font-size: 0.85em; padding: 3px 10px; border-radius: 4px; font-weight: bold; display: none;"></span></label>
             <input type="date" id="date" name="date" class="form-control" required>
@@ -98,7 +103,8 @@
         {% for slot in slots %}
         {
             id: "{{ slot._id }}",
-            time: "{{ slot.time }}{% if slot.venue %} ({{ slot.venue }}){% endif %}",
+            time: "{{ slot.time }}",
+            venue: "{{ slot.venue or '' }}",
             price: "{{ slot.price }}",
             sport: "{{ slot.sport|title }}",
             rateType: "{{ slot.rate_type|default('weekday') }}",
@@ -115,6 +121,42 @@
     });
 
     let currentSport = 'Football';
+    let currentVenue = '';
+
+    // Show a venue picker when the selected location has more than one venue (e.g. Khulna)
+    function renderVenueOptions(locId, sport) {
+        const group = document.getElementById('venue-group');
+        const container = document.getElementById('venue-buttons');
+        const venues = locId ? [...new Set(allSlots
+            .filter(s => s.locationId === locId && s.sport.toLowerCase() === sport.toLowerCase() && s.venue)
+            .map(s => s.venue))].sort() : [];
+
+        container.innerHTML = '';
+        if (venues.length === 0) {
+            group.style.display = 'none';
+            currentVenue = '';
+            return;
+        }
+        if (!venues.includes(currentVenue)) {
+            currentVenue = venues[0];
+        }
+        venues.forEach(venue => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'filter-tab' + (venue === currentVenue ? ' active' : '');
+            btn.style.cssText = 'flex: 1; padding: 10px; font-weight: bold; border: 1px solid var(--border-color); text-align: center; cursor: pointer; border-radius: 5px;';
+            btn.innerHTML = '<i class="fas fa-map-pin"></i> ';
+            btn.appendChild(document.createTextNode(venue));
+            btn.addEventListener('click', () => selectVenue(venue));
+            container.appendChild(btn);
+        });
+        group.style.display = 'block';
+    }
+
+    function selectVenue(venue) {
+        currentVenue = venue;
+        filterSlots(document.getElementById('location_id').value, currentSport);
+    }
 
     function getRateTypeForDate(dateStr) {
         if (!dateStr) return null;
@@ -175,6 +217,7 @@
         const slotSelect = document.getElementById('time_slot');
         slotSelect.innerHTML = '<option value="">Select Time Slot</option>';
         
+        renderVenueOptions(locId, sport);
         if (!locId) {
             slotSelect.innerHTML = '<option value="">Select Location first</option>';
             updateRateTypeBadge(null);
@@ -185,14 +228,16 @@
         const rateType = getRateTypeForDate(selectedDate);
         updateRateTypeBadge(rateType);
 
-        let filtered = allSlots.filter(s => s.locationId === locId && s.sport.toLowerCase() === sport.toLowerCase());
+        let filtered = allSlots.filter(s => s.locationId === locId && s.sport.toLowerCase() === sport.toLowerCase()
+            && (!currentVenue || s.venue === currentVenue));
         if (rateType) {
             filtered = filtered.filter(s => (s.rateType || 'weekday') === rateType);
         }
         
         if (filtered.length === 0) {
             const label = rateType ? (rateType === 'weekend' ? 'Weekend' : 'Normal Day') : '';
-            slotSelect.innerHTML = `<option value="">No ${label} ${sport} slots configured for this location</option>`;
+            const where = currentVenue ? currentVenue : 'this location';
+            slotSelect.innerHTML = `<option value="">No ${label} ${sport} slots configured for ${where}</option>`;
             return;
         }
 
