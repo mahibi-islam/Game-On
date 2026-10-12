@@ -14,12 +14,12 @@ class Slot:
     def create(data):
         """Create a new slot"""
         slot_data = {
-            'time': data.get('time'),
+            'time': str(data.get('time') or ''),
             'price': float(data.get('price')),
-            'sport': data.get('sport', 'football'),
-            'rate_type': data.get('rate_type', 'weekday'),
-            'enabled': data.get('enabled', True),
-            'discount_active': data.get('discount_active', False),
+            'sport': 'badminton' if data.get('sport') == 'badminton' else 'football',
+            'rate_type': 'weekend' if data.get('rate_type') == 'weekend' else 'weekday',
+            'enabled': bool(data.get('enabled', True)),
+            'discount_active': bool(data.get('discount_active', False)),
             'discount_percent': float(data.get('discount_percent', 0.0)),
             'location_id': ObjectId(data.get('location_id')) if data.get('location_id') else None
         }

@@ -56,11 +56,11 @@
                 </td>
                 <td>
                     <div class="action-buttons">
-                        <button onclick="openEditAdminModal('{{ admin._id }}', '{{ admin.username }}', '{{ admin.full_name or '' }}', '{{ admin.role }}', '{{ admin.location_id or '' }}')" class="btn btn-sm btn-primary" title="Edit Admin">
+                        <button data-id="{{ admin._id }}" data-username="{{ admin.username }}" data-full-name="{{ admin.full_name or '' }}" data-role="{{ admin.role }}" data-location-id="{{ admin.location_id or '' }}" onclick="openEditAdminModal(this.dataset.id, this.dataset.username, this.dataset.fullName, this.dataset.role, this.dataset.locationId)" class="btn btn-sm btn-primary" title="Edit Admin">
                             <i class="fas fa-edit"></i> Edit / Reset Password
                         </button>
                         {% if admin.username != session.get('admin_username') %}
-                        <form action="{{ url_for('admin.delete_admin_user', admin_id=admin._id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete admin account {{ admin.username }}?');">
+                        <form action="{{ url_for('admin.delete_admin_user', admin_id=admin._id) }}" method="POST" style="display: inline;" data-username="{{ admin.username }}" onsubmit="return confirm('Are you sure you want to delete admin account ' + this.dataset.username + '?');">
                             <button type="submit" class="btn btn-sm btn-danger" title="Delete Admin">
                                 <i class="fas fa-trash"></i>
                             </button>

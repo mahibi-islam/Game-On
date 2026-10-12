@@ -75,7 +75,8 @@
                         </td>
                         <td>
                             <button
-                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'football', '{{ slot.rate_type|default('weekday') }}', '{{ slot.location_id }}', this.dataset.venue)"
+                                onclick="editSlot('{{ slot._id }}', this.dataset.time, {{ slot.price|float }}, {{ 'true' if slot.enabled else 'false' }}, {{ 'true' if slot.discount_active else 'false' }}, {{ slot.discount_percent|default(0)|float }}, 'football', this.dataset.rateType, '{{ slot.location_id }}', this.dataset.venue)"
+                                data-time="{{ slot.time }}" data-rate-type="{{ slot.rate_type|default('weekday') }}"
                                 data-venue="{{ slot.venue or '' }}"
                                 class="btn btn-sm btn-primary">Edit</button>
                         </td>
@@ -136,7 +137,8 @@
                         </td>
                         <td>
                             <button
-                                onclick="editSlot('{{ slot._id }}', '{{ slot.time }}', {{ slot.price }}, {{ slot.enabled|lower }}, {{ slot.discount_active|default(false)|lower }}, {{ slot.discount_percent|default(0) }}, 'badminton', '{{ slot.rate_type|default('weekday') }}', '{{ slot.location_id }}', this.dataset.venue)"
+                                onclick="editSlot('{{ slot._id }}', this.dataset.time, {{ slot.price|float }}, {{ 'true' if slot.enabled else 'false' }}, {{ 'true' if slot.discount_active else 'false' }}, {{ slot.discount_percent|default(0)|float }}, 'badminton', this.dataset.rateType, '{{ slot.location_id }}', this.dataset.venue)"
+                                data-time="{{ slot.time }}" data-rate-type="{{ slot.rate_type|default('weekday') }}"
                                 data-venue="{{ slot.venue or '' }}"
                                 class="btn btn-sm btn-primary">Edit</button>
                         </td>

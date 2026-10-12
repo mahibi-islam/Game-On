@@ -13,7 +13,7 @@ from models.slot import Slot
 from models.settings import Settings
 from models.location import Location
 from utils.slot_utils import sort_slots, slot_label, slot_start_datetime, rate_type_for_date, get_bangladesh_now
-from db import mongo
+from db import mongo, limiter
 from werkzeug.utils import secure_filename
 
 admin_bp = Blueprint('admin', __name__)
@@ -123,6 +123,7 @@ def export_bookings_to_excel(bookings_list, locations_map, slots_map):
 # ==================== Authentication ====================
 
 @admin_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit('5 per minute;30 per hour', methods=['POST'])
 def login():
     """Admin login"""
     if request.method == 'POST':
@@ -130,14 +131,6 @@ def login():
         password = request.form.get('password', '')
         
         admin = Admin.find_by_username(username)
-        # If admin not found, attempt to initialize defaults and retry
-        if not admin:
-            try:
-                Admin.init_defaults()
-                admin = Admin.find_by_username(username)
-            except Exception:
-                admin = None
-                
         if admin and Admin.verify_password(admin, password):
             session['admin_logged_in'] = True
             session['admin_username'] = admin.get('username', username)
@@ -646,14 +639,14 @@ def update_slot(slot_id):
             
     data = request.json
     update_dict = {
-        'time': data.get('time'),
+        'time': str(data.get('time') or ''),
         'price': float(data.get('price')),
-        'sport': data.get('sport', 'football'),
-        'rate_type': data.get('rate_type', 'weekday'),
-        'enabled': data.get('enabled', True),
-        'discount_active': data.get('discount_active', False),
+        'sport': 'badminton' if data.get('sport') == 'badminton' else 'football',
+        'rate_type': 'weekend' if data.get('rate_type') == 'weekend' else 'weekday',
+        'enabled': bool(data.get('enabled', True)),
+        'discount_active': bool(data.get('discount_active', False)),
         'discount_percent': float(data.get('discount_percent', 0.0)),
-        'venue': data.get('venue', '')
+        'venue': str(data.get('venue') or '')
     }
     if not admin_loc_id and 'location_id' in data:
         update_dict['location_id'] = data['location_id']

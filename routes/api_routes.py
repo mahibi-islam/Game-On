@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, session
 from datetime import datetime
 from models.slot import Slot
 from models.booking import Booking
+from db import limiter
 from utils.slot_utils import sort_slots, rate_type_for_date, is_past_slot
 
 api_bp = Blueprint('api', __name__)
@@ -113,6 +114,7 @@ def get_availability(date):
         return jsonify({'error': str(e)}), 400
 
 @api_bp.route('/book', methods=['POST'])
+@limiter.limit('10 per hour')
 def create_booking():
     """Create a new booking"""
     try:

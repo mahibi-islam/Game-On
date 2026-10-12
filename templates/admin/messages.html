@@ -36,7 +36,8 @@
                     <td>
                         <div class="admin-table-actions">
                             <button type="button" class="admin-btn admin-btn-info"
-                                onclick="viewMessage('{{ message.name }}', '{{ message.message|replace('\n', ' ')|replace('\r', ' ')|escape }}')">
+                                data-name="{{ message.name }}" data-message="{{ message.message }}"
+                                onclick="viewMessage(this.dataset.name, this.dataset.message)">
                                 <i class="fas fa-eye"></i>
                             </button>
                             <form action="{{ url_for('admin.delete_message', message_id=message._id) }}" method="POST"

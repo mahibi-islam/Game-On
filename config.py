@@ -27,6 +27,17 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
 
+    # CSRF tokens stay valid for the whole session instead of expiring after an hour
+    WTF_CSRF_TIME_LIMIT = None
+
+    # Rate limiting (Flask-Limiter)
+    RATELIMIT_STORAGE_URI = os.environ.get('RATELIMIT_STORAGE_URI') or 'memory://'
+    RATELIMIT_HEADERS_ENABLED = True
+
+    # Number of reverse proxies in front of the app (the hosting platform's router).
+    # Used to read the real client IP from X-Forwarded-For for rate limiting.
+    PROXY_COUNT = int(os.environ.get('PROXY_COUNT', 1))
+
 class DevelopmentConfig(Config):
     """Development configuration"""
     DEBUG = True

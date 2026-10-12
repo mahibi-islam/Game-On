@@ -1,6 +1,9 @@
-from flask import Flask, Response, send_from_directory
+from flask import Flask, Response, send_from_directory, request, jsonify, flash, redirect
+from flask_wtf.csrf import CSRFError
+from werkzeug.middleware.proxy_fix import ProxyFix
 import os
-from db import mongo
+from urllib.parse import urlparse
+from db import mongo, limiter, csrf
 
 def create_app(config_name='development'):
     """Application factory pattern"""
@@ -21,8 +24,35 @@ def create_app(config_name='development'):
         from config import DevelopmentConfig
         app.config.from_object(DevelopmentConfig())
     
+    # Trust X-Forwarded-For/-Proto from the hosting platform's proxy so the real
+    # client IP is used for rate limiting. X-Forwarded-Host is deliberately not trusted.
+    if app.config.get('PROXY_COUNT'):
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=app.config['PROXY_COUNT'],
+                                x_proto=app.config['PROXY_COUNT'])
+
     # Initialize extensions
     mongo.init_app(app)
+    limiter.init_app(app)
+    csrf.init_app(app)
+
+    def reject(message, status):
+        """JSON error for API/fetch calls, otherwise flash and send the user back."""
+        # csrf.js adds X-CSRFToken to every fetch() POST, so it marks script callers
+        if request.path.startswith('/api/') or request.is_json or 'X-CSRFToken' in request.headers:
+            return jsonify({'error': message}), status
+        flash(message, 'error')
+        referrer = urlparse(request.referrer or '')
+        if referrer.netloc == request.host:
+            return redirect(referrer.path + (f'?{referrer.query}' if referrer.query else ''))
+        return redirect('/')
+
+    @app.errorhandler(429)
+    def too_many_requests(e):
+        return reject('Too many attempts. Please wait a few minutes and try again.', 429)
+
+    @app.errorhandler(CSRFError)
+    def csrf_error(e):
+        return reject('Your session expired or the form was out of date. Please try again.', 400)
     
     # Ensure directories exist
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)

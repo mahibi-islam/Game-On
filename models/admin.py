@@ -115,12 +115,22 @@ class Admin:
         if not khulna_loc and len(locs) > 1:
             khulna_loc = locs[1]
 
+        # Never fall back to a hardcoded password: missing default admins are only
+        # created when ADMIN_PASSWORD is set.
+        admin_password = os.environ.get('ADMIN_PASSWORD')
+        for existing in Admin.find_all():
+            if Admin.verify_password(existing, 'admin123'):
+                print(f"SECURITY WARNING: admin '{existing.get('username')}' still uses the default "
+                      f"password 'admin123'. Change it in Admin > Users.")
+
         # 1. Super Admin
         superadmin = Admin.find_by_username('admin')
-        admin_password = os.environ.get('ADMIN_PASSWORD') or 'admin123'
         if not superadmin:
-            Admin.create('admin', admin_password, role='superadmin', full_name='Super Administrator')
-            print("Default superadmin user 'admin' created.")
+            if admin_password:
+                Admin.create('admin', admin_password, role='superadmin', full_name='Super Administrator')
+                print("Default superadmin user 'admin' created.")
+            else:
+                print("WARNING: no superadmin 'admin' exists and ADMIN_PASSWORD is not set; skipping creation.")
         else:
             # Ensure superadmin role is explicitly set
             if superadmin.get('role') != 'superadmin' or superadmin.get('location_id') is not None:
@@ -133,7 +143,7 @@ class Admin:
         if bogura_loc:
             bogura_admin = Admin.find_by_username('admin_bogura')
             bogura_password = os.environ.get('ADMIN_BOGURA_PASSWORD') or admin_password
-            if not bogura_admin:
+            if not bogura_admin and bogura_password:
                 Admin.create(
                     'admin_bogura',
                     bogura_password,
@@ -142,7 +152,7 @@ class Admin:
                     full_name='Bogura Admin'
                 )
                 print(f"Default Bogura branch admin 'admin_bogura' created for location: {bogura_loc.get('name')}")
-            else:
+            elif bogura_admin:
                 Admin.get_collection().update_one(
                     {'_id': bogura_admin['_id']},
                     {'$set': {
@@ -156,7 +166,7 @@ class Admin:
         if khulna_loc:
             khulna_admin = Admin.find_by_username('admin_khulna')
             khulna_password = os.environ.get('ADMIN_KHULNA_PASSWORD') or admin_password
-            if not khulna_admin:
+            if not khulna_admin and khulna_password:
                 Admin.create(
                     'admin_khulna',
                     khulna_password,
@@ -165,7 +175,7 @@ class Admin:
                     full_name='Khulna Admin'
                 )
                 print(f"Default Khulna branch admin 'admin_khulna' created for location: {khulna_loc.get('name')}")
-            else:
+            elif khulna_admin:
                 Admin.get_collection().update_one(
                     {'_id': khulna_admin['_id']},
                     {'$set': {

@@ -3,7 +3,7 @@ from werkzeug.security import check_password_hash
 from models.user import create_user, find_user_by_login, update_last_login, set_reset_token, verify_reset_token, update_password
 from models.admin import Admin
 from models.settings import Settings
-from db import mongo
+from db import mongo, limiter
 from utils.email_utils import send_reset_email
 import secrets
 from datetime import datetime, timedelta
@@ -11,10 +11,20 @@ from datetime import datetime, timedelta
 auth_bp = Blueprint('auth', __name__)
 
 
+def safe_next_url(default_endpoint='user.index'):
+    """Return the ?next= target only if it is a local path, so login can't
+    be used to redirect visitors to another site."""
+    target = (request.args.get('next') or request.form.get('next') or '').strip()
+    if target.startswith('/') and not target.startswith('//') and '\\' not in target:
+        return target
+    return url_for(default_endpoint)
+
+
 @auth_bp.route('/signup', methods=['GET', 'POST'])
+@limiter.limit('5 per hour', methods=['POST'])
 def signup():
     settings = Settings.find_one()
-    next_url = request.args.get('next') or request.form.get('next') or url_for('user.index')
+    next_url = safe_next_url()
     if request.method == 'POST':
         data = {
             'first_name': request.form.get('first_name', '').strip(),
@@ -59,9 +69,10 @@ def signup():
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit('10 per minute;50 per hour', methods=['POST'])
 def login():
     settings = Settings.find_one()
-    next_url = request.args.get('next') or request.form.get('next') or url_for('user.index')
+    next_url = safe_next_url()
     if request.method == 'POST':
         identifier = request.form.get('identifier', '').strip()
         password = request.form.get('password', '')
@@ -84,12 +95,6 @@ def login():
 
         # Fallback: admin login via same form using username
         admin = Admin.find_by_username(identifier)
-        if not admin:
-            try:
-                Admin.init_defaults()
-                admin = Admin.find_by_username(identifier)
-            except Exception:
-                admin = None
         if admin and Admin.verify_password(admin, password):
             session['admin_logged_in'] = True
             session['admin_username'] = admin.get('username', identifier)
@@ -119,6 +124,7 @@ def logout():
 
 
 @auth_bp.route('/forgot-password', methods=['GET', 'POST'])
+@limiter.limit('5 per hour', methods=['POST'])
 def forgot_password():
     settings = Settings.find_one()
     if request.method == 'POST':
@@ -139,6 +145,7 @@ def forgot_password():
 
 
 @auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+@limiter.limit('10 per hour', methods=['POST'])
 def reset_password(token):
     settings = Settings.find_one()
     user = verify_reset_token(token)

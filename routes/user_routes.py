@@ -3,7 +3,7 @@ from models.settings import Settings
 from models.booking import Booking
 from models.slot import Slot
 from models.user import get_current_user
-from db import mongo
+from db import mongo, limiter
 from datetime import datetime, timedelta
 from bson import ObjectId
 from utils.slot_utils import sort_slots, slot_label, slot_start_datetime, get_bangladesh_now
@@ -49,15 +49,14 @@ def profile():
     settings = Settings.find_one()
     user = get_current_user()
 
+    # Bookings are matched by account only. Phone numbers are unverified and
+    # user-editable, so matching on phone would expose other people's bookings.
     session_user_id = session.get('user_id')
     user_id_query = {'$or': [{'user_id': session_user_id}]}
     try:
         user_id_query['$or'].append({'user_id': ObjectId(session_user_id)})
     except Exception:
         pass
-    # Fallback: match by phone if old bookings lack user_id
-    if user and user.get('phone'):
-        user_id_query['$or'].append({'phone': user.get('phone')})
 
     bookings = Booking.find_all(user_id_query, sort=[('created_at', -1)])
     
@@ -165,11 +164,19 @@ def update_profile():
     
     user_id = session.get('user_id')
     data = request.form
-    
+
+    phone = (data.get('phone') or '').strip() or None
+    if phone:
+        current_user = get_current_user()
+        owner = mongo.db.users.find_one({'phone': phone}, {'_id': 1})
+        if owner and (not current_user or owner['_id'] != current_user['_id']):
+            flash('That phone number is already registered to another account.', 'error')
+            return redirect(url_for('user.profile'))
+
     success = update_details(user_id, {
         'first_name': data.get('first_name'),
         'last_name': data.get('last_name'),
-        'phone': data.get('phone')
+        'phone': phone
     })
     
     if success:
@@ -238,6 +245,7 @@ def gallery():
     return render_template('gallery.html', images=images, videos=videos)
 
 @user_bp.route('/contact', methods=['GET', 'POST'])
+@limiter.limit('5 per hour', methods=['POST'])
 def contact():
     """Contact page"""
     if request.method == 'POST':
@@ -276,15 +284,12 @@ def cancel_booking(booking_id):
         flash('Please log in to manage your bookings.', 'error')
         return redirect(url_for('auth.login', next=url_for('user.profile')))
 
-    booking = Booking.find_by_id(booking_id)
-    current_user = get_current_user()
-    authorized = False
-    if booking:
-        # Authorized if user_id matches or phone matches current user's phone
-        if str(booking.get('user_id')) == session.get('user_id'):
-            authorized = True
-        elif current_user and booking.get('phone') and booking.get('phone') == current_user.get('phone'):
-            authorized = True
+    try:
+        booking = Booking.find_by_id(booking_id)
+    except Exception:
+        booking = None
+    # Only the account that made the booking may cancel it
+    authorized = bool(booking) and str(booking.get('user_id')) == str(session.get('user_id'))
     if not booking or not authorized:
         flash('Booking not found or unauthorized.', 'error')
         return redirect(url_for('user.profile'))
