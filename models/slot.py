@@ -209,9 +209,11 @@ class Slot:
                     print(f"Initialized default weekend slots for location: {loc['name']}")
 
         Slot.init_khulna_schedule(locs)
+        Slot.raise_khulna_venue2_prices(locs)
 
     # GAME ON KHULNA football schedule (both venues share it): time -> (weekday, weekend) price.
     # Weekday = Sunday-Thursday, weekend = Friday-Saturday.
+    # Venue 2 is then raised by KHULNA_VENUE2_PRICE_INCREASE (see raise_khulna_venue2_prices).
     KHULNA_VENUES = ['Venue 1', 'Venue 2']
     KHULNA_FOOTBALL_PRICES = [
         ('06:00-07:30', 2200, 2400),
@@ -231,6 +233,36 @@ class Slot:
         ('03:00-04:30', 2400, 2400),
         ('04:30-06:00', 2400, 2400),
     ]
+    KHULNA_VENUE2_PRICE_INCREASE = 100
+
+    @staticmethod
+    def raise_khulna_venue2_prices(locs):
+        """One-time migration: raise every GAME ON KHULNA Venue 2 football slot
+        (weekday and weekend) by KHULNA_VENUE2_PRICE_INCREASE taka. Uses $inc so
+        any per-slot price edits made in the admin panel are preserved."""
+        from db import mongo
+        from pymongo.errors import DuplicateKeyError
+
+        khulna = next((l for l in locs if 'khulna' in l.get('name', '').lower()), None)
+        if not khulna:
+            return
+
+        migration_id = 'khulna_venue2_price_increase_100'
+        try:
+            mongo.db.migrations.insert_one({'_id': migration_id})
+        except DuplicateKeyError:
+            return
+
+        try:
+            result = Slot.get_collection().update_many(
+                {'location_id': khulna['_id'], 'sport': 'football', 'venue': 'Venue 2'},
+                {'$inc': {'price': Slot.KHULNA_VENUE2_PRICE_INCREASE}}
+            )
+        except Exception:
+            mongo.db.migrations.delete_one({'_id': migration_id})  # retry on next start
+            raise
+        print(f"Raised {result.modified_count} Khulna Venue 2 football slot price(s) "
+              f"by {Slot.KHULNA_VENUE2_PRICE_INCREASE}")
 
     @staticmethod
     def init_khulna_schedule(locs):
