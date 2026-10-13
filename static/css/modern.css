@@ -743,3 +743,27 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .table tr:hover {
     background: rgba(255, 255, 255, 0.02);
 }
+/* Gallery videos: keep them inside the screen on every device */
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.video-item video {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* Small phones: tighter pricing tables so they fit without sideways scrolling */
+@media (max-width: 480px) {
+    .pricing-table th,
+    .pricing-table td {
+        padding: 0.6rem 0.5rem;
+        font-size: 0.85rem;
+    }
+}

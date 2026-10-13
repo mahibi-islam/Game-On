@@ -150,10 +150,54 @@
         pointer-events: none;
     }
 
+    /* Let grid columns shrink below their content's natural width */
+    .control-step,
+    .date-input-wrapper,
+    .date-input-wrapper input {
+        min-width: 0;
+    }
+
     @media (max-width: 992px) {
         .availability-steps-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: minmax(0, 1fr);
             gap: 1.8rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .availability-card {
+            padding: 1.5rem 1rem;
+        }
+
+        .availability-sport-container .sport-card {
+            padding: 0 10px;
+            gap: 8px;
+        }
+
+        .availability-sport-container .sport-card h3 {
+            font-size: 0.85rem;
+        }
+
+        .date-row {
+            flex-direction: column;
+        }
+
+        .date-row .btn {
+            height: 46px;
+            justify-content: center;
+        }
+
+        .venue-pills-row {
+            flex-wrap: wrap;
+        }
+
+        .venue-pill-btn {
+            min-width: calc(50% - 4px);
+        }
+
+        .availability-legend {
+            flex-wrap: wrap;
+            gap: 0.75rem 1.25rem;
         }
     }
 
@@ -285,7 +329,7 @@
                     Select Date
                 </h3>
                 <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <div style="display: flex; gap: 10px; width: 100%;">
+                    <div class="date-row" style="display: flex; gap: 10px; width: 100%;">
                         <div class="date-input-wrapper">
                             <input type="date" id="availability-date" class="form-control" style="margin-top: 0;">
                             <i class="fas fa-calendar-day"></i>
@@ -395,7 +439,7 @@
             }
             syncVenueButtons(selectedVenue);
         } else {
-            if (badmintonCard) badmintonCard.style.display = 'block';
+            if (badmintonCard) badmintonCard.style.display = '';
             if (venueWrapper) venueWrapper.style.display = 'none';
             selectedVenue = null;
         }
