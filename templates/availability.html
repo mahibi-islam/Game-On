@@ -20,7 +20,7 @@
         align-items: start;
     }
 
-    .control-step h3 {
+    .control-step > h3 {
         font-size: 1rem;
         color: var(--primary-color) !important;
         margin-top: 0;
@@ -53,6 +53,8 @@
     .select-wrapper select {
         padding-left: 2.8rem !important;
         cursor: pointer;
+        height: 50px !important;
+        box-sizing: border-box;
     }
 
     .select-wrapper i {
@@ -67,46 +69,64 @@
 
     .availability-sport-container {
         display: flex;
-        gap: 12px;
+        gap: 10px;
         width: 100%;
     }
 
     .availability-sport-container .sport-card {
         flex: 1;
         width: auto;
-        padding: 12px 10px;
+        height: 50px;
+        min-height: 50px;
+        padding: 0 16px;
         border-radius: 12px;
         margin: 0;
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid var(--glass-border);
-        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
         cursor: pointer;
         transition: all 0.3s ease;
+        box-sizing: border-box;
     }
 
     .availability-sport-container .sport-card:hover {
-        transform: translateY(-3px);
+        transform: translateY(-2px);
         border-color: var(--primary-color);
         box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
     }
 
     .availability-sport-container .sport-card.selected {
-        background: rgba(0, 255, 136, 0.1);
+        background: rgba(0, 255, 136, 0.12);
         border-color: var(--primary-color);
         box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
     }
 
     .availability-sport-container .sport-icon {
-        font-size: 1.6rem;
+        font-size: 1.25rem;
         color: var(--primary-color);
-        margin-bottom: 6px;
+        margin: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
     }
 
-    .availability-sport-container h3 {
+    .availability-sport-container .sport-card h3 {
         font-size: 0.95rem;
-        margin: 0;
-        font-weight: 600;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-weight: 700;
         color: var(--text-primary) !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        text-align: center;
     }
 
     .date-input-wrapper {
@@ -116,6 +136,8 @@
 
     .date-input-wrapper input {
         padding-left: 2.8rem !important;
+        height: 50px !important;
+        box-sizing: border-box;
     }
 
     .date-input-wrapper i {
@@ -134,6 +156,67 @@
             gap: 1.8rem;
         }
     }
+
+    /* Venue selection styles */
+    .venue-selection-container {
+        margin-top: 14px;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .venue-selection-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--primary-color);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .venue-pills-row {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .venue-pill-btn {
+        flex: 1;
+        padding: 9px 8px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--glass-border);
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+
+    .venue-pill-btn:hover {
+        background: rgba(0, 255, 136, 0.08);
+        border-color: var(--primary-color);
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    .venue-pill-btn.active {
+        background: rgba(0, 255, 136, 0.15);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        box-shadow: 0 0 14px rgba(0, 255, 136, 0.25);
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 </style>
 {% endblock %}
 
@@ -150,12 +233,30 @@
                     Select Location
                 </h3>
                 <div class="select-wrapper">
-                    <select id="location-select" class="form-control" onchange="loadAvailability()" style="margin-top: 0;">
+                    <select id="location-select" class="form-control" onchange="onLocationChange()" style="margin-top: 0;">
                         {% for loc in active_locations %}
-                        <option value="{{ loc._id }}">{{ loc.name.replace('GAME ON ', '') }}</option>
+                        <option value="{{ loc._id }}" data-name="{{ loc.name }}">{{ loc.name.replace('GAME ON ', '') }}</option>
                         {% endfor %}
                     </select>
                     <i class="fas fa-map-marker-alt"></i>
+                </div>
+
+                <!-- Venue selection for locations with multiple venues (e.g. Khulna) -->
+                <div id="venue-selection-wrapper" class="venue-selection-container" style="display: none;">
+                    <div class="venue-selection-label">
+                        <i class="fas fa-map-pin"></i> Select Venue
+                    </div>
+                    <div class="venue-pills-row" id="venue-pills-row">
+                        <button type="button" class="venue-pill-btn active" data-venue="Venue 1" onclick="selectVenue('Venue 1')">
+                            <i class="fas fa-futbol"></i> Venue 1
+                        </button>
+                        <button type="button" class="venue-pill-btn" data-venue="Venue 2" onclick="selectVenue('Venue 2')">
+                            <i class="fas fa-futbol"></i> Venue 2
+                        </button>
+                        <button type="button" class="venue-pill-btn" data-venue="all" onclick="selectVenue('all')">
+                            <i class="fas fa-layer-group"></i> All Venues
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -233,16 +334,23 @@
 {% block extra_js %}
 <script>
     let autoRefreshInterval = null;
+    let currentSlots = [];
+    let selectedVenue = null; // 'Venue 1', 'Venue 2', 'all', or null
 
     // Set minimum date to today
     document.getElementById('availability-date').min = new Date().toISOString().split('T')[0];
 
-    // Check if date, sport, location is in URL params
+    // Check if date, sport, location, venue is in URL params
     const urlParams = new URLSearchParams(window.location.search);
     const dateParam = urlParams.get('date');
     const sportParam = urlParams.get('sport');
     const locationParam = urlParams.get('location');
+    const venueParam = urlParams.get('venue');
     let selectedSport = sportParam || 'football';
+
+    if (venueParam) {
+        selectedVenue = venueParam;
+    }
 
     if (sportParam) {
         selectSport(sportParam, null);
@@ -255,9 +363,65 @@
         }
     }
 
+    // Initial check for location's venue & sport support
+    checkVenueAndSportAvailability();
+
     if (dateParam) {
         document.getElementById('availability-date').value = dateParam;
         loadAvailability();
+    }
+
+    function checkVenueAndSportAvailability() {
+        const locSelect = document.getElementById('location-select');
+        if (!locSelect || locSelect.selectedIndex === -1) return;
+
+        const selectedText = locSelect.options[locSelect.selectedIndex].text.toUpperCase();
+        const badmintonCard = document.getElementById('badminton-card');
+        const venueWrapper = document.getElementById('venue-selection-wrapper');
+        const isKhulna = selectedText.includes('KHULNA');
+
+        if (isKhulna) {
+            if (badmintonCard) {
+                badmintonCard.style.display = 'none';
+                if (selectedSport === 'badminton') {
+                    selectSport('football', document.querySelector('.sport-card[onclick*="football"]'));
+                    return;
+                }
+            }
+            if (venueWrapper) venueWrapper.style.display = 'block';
+
+            if (!selectedVenue || (selectedVenue !== 'Venue 1' && selectedVenue !== 'Venue 2' && selectedVenue !== 'all')) {
+                selectedVenue = 'Venue 1';
+            }
+            syncVenueButtons(selectedVenue);
+        } else {
+            if (badmintonCard) badmintonCard.style.display = 'block';
+            if (venueWrapper) venueWrapper.style.display = 'none';
+            selectedVenue = null;
+        }
+    }
+
+    function onLocationChange() {
+        checkVenueAndSportAvailability();
+        if (document.getElementById('availability-date').value) {
+            loadAvailability();
+        }
+    }
+
+    function selectVenue(venue) {
+        selectedVenue = venue;
+        syncVenueButtons(venue);
+        renderSlotsTable();
+    }
+
+    function syncVenueButtons(venue) {
+        document.querySelectorAll('.venue-pill-btn').forEach(btn => {
+            if (btn.getAttribute('data-venue') === venue) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
     }
 
     function selectSport(sport, element) {
@@ -267,10 +431,9 @@
         if (element) {
             element.classList.add('selected');
         } else {
-            // Find card by sport text if element not provided (e.g. from URL)
             const cards = document.querySelectorAll('.sport-card');
-            if (sport === 'football') cards[0].classList.add('selected');
-            if (sport === 'badminton') cards[1].classList.add('selected');
+            if (sport === 'football' && cards[0]) cards[0].classList.add('selected');
+            if (sport === 'badminton' && cards[1]) cards[1].classList.add('selected');
         }
 
         // Reload if date is selected
@@ -281,84 +444,113 @@
 
     function loadAvailability() {
         const date = document.getElementById('availability-date').value;
-        const locId = document.getElementById('location-select').value;
-
-        // Hide/show badminton based on location name
         const locSelect = document.getElementById('location-select');
-        if (locSelect && locSelect.selectedIndex !== -1) {
-            const selectedText = locSelect.options[locSelect.selectedIndex].text.toUpperCase();
-            const badmintonCard = document.getElementById('badminton-card');
-            if (badmintonCard) {
-                if (selectedText.includes('KHULNA')) {
-                    badmintonCard.style.display = 'none';
-                    if (selectedSport === 'badminton') {
-                        // Switch to football
-                        selectSport('football', document.querySelector('.sport-card[onclick*="football"]'));
-                        return;
-                    }
-                } else {
-                    badmintonCard.style.display = 'block';
-                }
-            }
-        }
+        const locId = locSelect ? locSelect.value : '';
+
+        checkVenueAndSportAvailability();
 
         if (!date) {
-            alert('Please select a date');
+            const tbody = document.getElementById('availability-tbody');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center">Select a date to view availability</td></tr>';
             return;
         }
+
+        const tbody = document.getElementById('availability-tbody');
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Loading availability...</td></tr>';
 
         fetch(`/api/availability/${date}?sport=${selectedSport}&location_id=${locId}`)
             .then(res => res.json())
             .then(data => {
-                const tbody = document.getElementById('availability-tbody');
-                if (data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-center">No slots available for this location</td></tr>';
+                if (data.error) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">${data.error}</td></tr>`;
                     return;
                 }
+                currentSlots = Array.isArray(data) ? data : [];
 
-                tbody.innerHTML = data.map(slot => {
-                    let statusClass = 'available';
-                    let statusText = 'Available';
+                // Check if returned slots contain multiple venues
+                const venuesInData = [...new Set(currentSlots.filter(s => s.venue).map(s => s.venue))].sort();
+                if (venuesInData.length > 1) {
+                    const venueWrapper = document.getElementById('venue-selection-wrapper');
+                    if (venueWrapper) venueWrapper.style.display = 'block';
 
-                    if (slot.is_booked) {
-                        statusClass = 'booked';
-                        statusText = 'Booked';
-                    } else if (slot.is_pending) {
-                        statusClass = 'pending';
-                        statusText = 'Pending';
-                    } else if (slot.is_past) {
-                        statusClass = 'past';
-                        statusText = 'Unavailable';
+                    if (!selectedVenue || (!venuesInData.includes(selectedVenue) && selectedVenue !== 'all')) {
+                        selectedVenue = venuesInData[0] || 'Venue 1';
                     }
+                    syncVenueButtons(selectedVenue);
+                }
 
-                    return `
-                    <tr>
-                        <td>${slot.time}${slot.venue ? ` <span style="color: var(--primary-color); font-weight: 600;">(${slot.venue})</span>` : ''}</td>
-                        <td>
-                            ${slot.discount_active ?
-                            `<span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳${slot.price}</span>
-                                 <span style="color: var(--primary-color); font-weight: bold;">৳${slot.price * (1 - slot.discount_percent / 100)}</span>
-                                 <div style="font-size: 0.8em; color: var(--primary-color);">(${slot.discount_percent}% OFF)</div>` :
-                            `৳${slot.price}`
-                        }
-                        </td>
-                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                        <td>
-                            ${slot.available ?
-                                (slot.online_booking_enabled ?
-                                `<a href="/booking?location=${encodeURIComponent(locId)}&sport=${encodeURIComponent(selectedSport)}&date=${encodeURIComponent(date)}&slot=${encodeURIComponent(slot._id)}" class="btn btn-sm btn-primary">Book Now</a>` :
-                                `<a href="tel:${slot.phone}" class="badge" style="padding: 6px 12px; font-weight: bold; border-radius: 4px; color: #000 !important; background-color: #ffc107 !important; display: inline-block; text-decoration: none;"><i class="fas fa-phone-alt" style="margin-right: 5px;"></i> Call to Book</a>`) :
-                            '<span class="text-muted">Unavailable</span>'
-                        }
-                        </td>
-                    </tr>
-                `;
-                }).join('');
+                renderSlotsTable();
             })
             .catch(err => {
                 console.error(err);
-                alert('Error loading availability');
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading availability</td></tr>';
             });
+    }
+
+    function renderSlotsTable() {
+        const tbody = document.getElementById('availability-tbody');
+        const date = document.getElementById('availability-date').value;
+        const locSelect = document.getElementById('location-select');
+        const locId = locSelect ? locSelect.value : '';
+
+        if (!currentSlots || currentSlots.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center">No slots available for this location</td></tr>';
+            return;
+        }
+
+        let displaySlots = currentSlots;
+        if (selectedVenue && selectedVenue !== 'all') {
+            displaySlots = currentSlots.filter(s => s.venue === selectedVenue);
+        }
+
+        if (displaySlots.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center">No slots available for ${selectedVenue}</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = displaySlots.map(slot => {
+            let statusClass = 'available';
+            let statusText = 'Available';
+
+            if (slot.is_booked) {
+                statusClass = 'booked';
+                statusText = 'Booked';
+            } else if (slot.is_pending) {
+                statusClass = 'pending';
+                statusText = 'Pending';
+            } else if (slot.is_past) {
+                statusClass = 'past';
+                statusText = 'Unavailable';
+            }
+
+            const venueBadge = slot.venue ? `<span style="display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; background: rgba(0, 255, 136, 0.12); color: var(--primary-color); border: 1px solid rgba(0, 255, 136, 0.3);">${slot.venue}</span>` : '';
+            const discountedPrice = slot.discount_active ? Math.round(slot.price * (1 - slot.discount_percent / 100)) : slot.price;
+
+            const bookingUrl = `/booking?location=${encodeURIComponent(locId)}&sport=${encodeURIComponent(selectedSport)}&date=${encodeURIComponent(date)}&slot=${encodeURIComponent(slot._id)}${slot.venue ? `&venue=${encodeURIComponent(slot.venue)}` : ''}`;
+
+            return `
+            <tr>
+                <td><strong>${slot.time}</strong>${venueBadge}</td>
+                <td>
+                    ${slot.discount_active ?
+                    `<span style="text-decoration: line-through; color: #888; font-size: 0.9em;">৳${slot.price}</span>
+                     <span style="color: var(--primary-color); font-weight: bold; margin-left: 4px;">৳${discountedPrice}</span>
+                     <div style="font-size: 0.8em; color: var(--primary-color);">(${slot.discount_percent}% OFF)</div>` :
+                    `<strong>৳${slot.price}</strong>`
+                }
+                </td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    ${slot.available ?
+                        (slot.online_booking_enabled ?
+                        `<a href="${bookingUrl}" class="btn btn-sm btn-primary">Book Now</a>` :
+                        `<a href="tel:${slot.phone}" class="badge" style="padding: 6px 12px; font-weight: bold; border-radius: 4px; color: #000 !important; background-color: #ffc107 !important; display: inline-block; text-decoration: none;"><i class="fas fa-phone-alt" style="margin-right: 5px;"></i> Call to Book</a>`) :
+                    '<span class="text-muted">Unavailable</span>'
+                }
+                </td>
+            </tr>
+        `;
+        }).join('');
     }
 
     document.getElementById('auto-refresh').addEventListener('change', function () {

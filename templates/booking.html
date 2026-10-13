@@ -92,6 +92,12 @@
     <!-- Step 4: Time Slot Selection -->
     <div class="booking-step-content hidden" id="step-4">
         <h2>Choose Time Slot</h2>
+        <div id="booking-venue-filter" class="table-venue-tabs" style="display: none; margin: 0 auto 20px auto; width: fit-content;">
+            <span class="table-venue-label"><i class="fas fa-map-pin"></i> Venue:</span>
+            <button type="button" class="table-venue-btn active" data-venue="Venue 1" onclick="selectBookingVenue('Venue 1')">Venue 1</button>
+            <button type="button" class="table-venue-btn" data-venue="Venue 2" onclick="selectBookingVenue('Venue 2')">Venue 2</button>
+            <button type="button" class="table-venue-btn" data-venue="all" onclick="selectBookingVenue('all')">All Venues</button>
+        </div>
         <div id="slots-container" class="slots-grid">
             <p class="loading">Loading slots...</p>
         </div>
@@ -196,6 +202,55 @@
         opacity: 1;
         transform: scale(1);
     }
+
+    .table-venue-tabs {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 4px;
+        gap: 4px;
+    }
+
+    .table-venue-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-secondary);
+        padding: 0 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .table-venue-btn {
+        padding: 6px 14px;
+        border-radius: 8px;
+        background: transparent;
+        border: 1px solid transparent;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .table-venue-btn:hover {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .table-venue-btn.active {
+        background: var(--primary-color);
+        color: #000;
+        font-weight: 700;
+        box-shadow: 0 0 12px rgba(0, 255, 136, 0.3);
+    }
 </style>
 {% endblock %}
 
@@ -207,6 +262,8 @@
     let selectedDate = '';
     let selectedSlot = null;
     let selectedSlotId = '';
+    let currentBookingSlots = [];
+    let selectedBookingVenue = "{{ preselected_venue or '' }}";
     let selectedAmount = 0;
     let bookingId = '';
     const isLoggedIn = {{ 'true' if user else 'false' }};
@@ -340,6 +397,81 @@
         }
     });
 
+    function selectBookingVenue(venue) {
+        selectedBookingVenue = venue;
+        syncBookingVenueButtons(venue);
+        renderBookingSlots();
+    }
+
+    function syncBookingVenueButtons(venue) {
+        document.querySelectorAll('#booking-venue-filter .table-venue-btn').forEach(btn => {
+            if (btn.getAttribute('data-venue') === venue) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    function renderBookingSlots() {
+        const container = document.getElementById('slots-container');
+        if (!currentBookingSlots || currentBookingSlots.length === 0) {
+            container.innerHTML = '<p>No slots available for this location</p>';
+            return;
+        }
+
+        let displaySlots = currentBookingSlots;
+        if (selectedBookingVenue && selectedBookingVenue !== 'all') {
+            displaySlots = currentBookingSlots.filter(s => s.venue === selectedBookingVenue);
+        }
+
+        if (displaySlots.length === 0) {
+            container.innerHTML = `<p>No slots available for ${selectedBookingVenue}</p>`;
+            return;
+        }
+
+        container.innerHTML = displaySlots.map(slot => {
+            const slotLabel = slot.venue ? `${slot.time} (${slot.venue})` : slot.time;
+            let statusClass = 'available';
+            let statusText = 'Available';
+
+            if (slot.is_booked) {
+                statusClass = 'booked';
+                statusText = 'Booked';
+            } else if (slot.is_pending) {
+                statusClass = 'pending';
+                statusText = 'Pending';
+            } else if (slot.is_past) {
+                statusClass = 'past';
+                statusText = 'Unavailable';
+            } else if (!slot.online_booking_enabled) {
+                statusClass = 'bookings-disabled';
+                statusText = 'Call to Book';
+            }
+
+            const discountedPrice = slot.discount_active ? Math.round(slot.price * (1 - slot.discount_percent / 100)) : slot.price;
+
+            return `
+            <div class="slot-card ${statusClass} ${selectedSlotId === slot._id ? 'selected' : ''}" 
+                  data-slot-id="${slot._id}" 
+                  data-time="${slotLabel}" 
+                  data-price="${slot.price}"
+                  onclick="${slot.available ? (slot.online_booking_enabled ? `selectSlot('${slot._id}', '${slotLabel}', ${slot.price}, ${slot.discount_active}, ${slot.discount_percent})` : `showBookingDisabledAlert('${slot.phone}')`) : ''}">
+                ${slot.venue ? `<div class="slot-venue" style="font-size: 0.75em; font-weight: 600; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.5px;">${slot.venue}</div>` : ''}
+                <div class="slot-time">${slot.time}</div>
+                <div class="slot-price">
+                    ${slot.discount_active ?
+                    `<span style="text-decoration: line-through; color: #888; font-size: 0.8em;">৳${slot.price}</span> ৳${discountedPrice}
+                         <div style="font-size: 0.7em; color: var(--primary-color);">( ${slot.discount_percent}% OFF )</div>` :
+                    `৳${slot.price}`
+                }
+                </div>
+                <div class="slot-status">${statusText}</div>
+            </div>
+        `;
+        }).join('');
+    }
+
     function loadSlots(date) {
         const container = document.getElementById('slots-container');
         container.innerHTML = '<p class="loading">Loading slots...</p>';
@@ -352,44 +484,28 @@
                     return;
                 }
 
-                 container.innerHTML = data.map(slot => {
-                    const slotLabel = slot.venue ? `${slot.time} (${slot.venue})` : slot.time;
-                    let statusClass = 'available';
-                    let statusText = 'Available';
+                currentBookingSlots = data;
+                const venuesInData = [...new Set(data.filter(s => s.venue).map(s => s.venue))].sort();
+                const venueFilter = document.getElementById('booking-venue-filter');
 
-                    if (slot.is_booked) {
-                        statusClass = 'booked';
-                        statusText = 'Booked';
-                    } else if (slot.is_pending) {
-                        statusClass = 'pending';
-                        statusText = 'Pending';
-                    } else if (slot.is_past) {
-                        statusClass = 'past';
-                        statusText = 'Unavailable';
-                    } else if (!slot.online_booking_enabled) {
-                        statusClass = 'bookings-disabled';
-                        statusText = 'Call to Book';
-                    }
-
-                    return `
-                    <div class="slot-card ${statusClass}" 
-                          data-slot-id="${slot._id}" 
-                          data-time="${slotLabel}" 
-                          data-price="${slot.price}"
-                          onclick="${slot.available ? (slot.online_booking_enabled ? `selectSlot('${slot._id}', '${slotLabel}', ${slot.price}, ${slot.discount_active}, ${slot.discount_percent})` : `showBookingDisabledAlert('${slot.phone}')`) : ''}">
-                        ${slot.venue ? `<div class="slot-venue" style="font-size: 0.75em; font-weight: 600; color: var(--primary-color); text-transform: uppercase; letter-spacing: 0.5px;">${slot.venue}</div>` : ''}
-                        <div class="slot-time">${slot.time}</div>
-                        <div class="slot-price">
-                            ${slot.discount_active ?
-                            `<span style="text-decoration: line-through; color: #888; font-size: 0.8em;">৳${slot.price}</span> ৳${slot.price * (1 - slot.discount_percent / 100)}
-                                 <div style="font-size: 0.7em; color: var(--primary-color);">( ${slot.discount_percent}% OFF )</div>` :
-                            `৳${slot.price}`
+                if (venuesInData.length > 1) {
+                    venueFilter.style.display = 'inline-flex';
+                    if (preselectedSlotId) {
+                        const preSlot = data.find(s => s._id === preselectedSlotId);
+                        if (preSlot && preSlot.venue) {
+                            selectedBookingVenue = preSlot.venue;
                         }
-                        </div>
-                        <div class="slot-status">${statusText}</div>
-                    </div>
-                `;
-                }).join('');
+                    }
+                    if (!selectedBookingVenue || (!venuesInData.includes(selectedBookingVenue) && selectedBookingVenue !== 'all')) {
+                        selectedBookingVenue = venuesInData[0] || 'Venue 1';
+                    }
+                    syncBookingVenueButtons(selectedBookingVenue);
+                } else {
+                    venueFilter.style.display = 'none';
+                    selectedBookingVenue = '';
+                }
+
+                renderBookingSlots();
 
                 // Check for preselected slot
                 if (preselectedSlotId) {

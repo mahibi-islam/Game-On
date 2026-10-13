@@ -29,6 +29,7 @@ def booking():
     sport_param = request.args.get('sport')
     date_param = request.args.get('date')
     slot_param = request.args.get('slot')
+    venue_param = request.args.get('venue')
     
     settings = Settings.find_one()
     user = get_current_user()
@@ -36,7 +37,8 @@ def booking():
                            preselected_location_id=loc_param,
                            preselected_sport=sport_param,
                            preselected_date=date_param,
-                           preselected_slot_id=slot_param)
+                           preselected_slot_id=slot_param,
+                           preselected_venue=venue_param)
 
 
 @user_bp.route('/profile')
