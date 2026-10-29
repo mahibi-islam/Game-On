@@ -16,10 +16,16 @@ class Config:
     
     # Google Sheets for bookings export/sync
     GOOGLE_SHEETS_URL = os.environ.get('GOOGLE_SHEETS_URL')
-    GOOGLE_SHEETS_CREDENTIALS_FILE = os.environ.get('GOOGLE_SHEETS_CREDENTIALS_FILE') or 'credentials.json'
+    GOOGLE_SHEETS_CREDENTIALS_FILE = os.environ.get('GOOGLE_SHEETS_CREDENTIALS_FILE') or os.environ.get('GOOGLE_CREDENTIALS_FILE') or 'credentials.json'
+    GOOGLE_CREDENTIALS_JSON = os.environ.get('GOOGLE_CREDENTIALS_JSON') or os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
+    GOOGLE_TOKEN_FILE = os.environ.get('GOOGLE_TOKEN_FILE') or 'token.json'
+    GOOGLE_TOKEN_JSON = os.environ.get('GOOGLE_TOKEN_JSON')
+    
+    # Cloudinary media storage (optional)
+    CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
     
     # Fallback to local Excel if Google Sheets not configured
-    EXCEL_FILE = 'bookings.xlsx'
+    EXCEL_FILE = os.environ.get('EXCEL_FILE') or 'bookings.xlsx'
     
     # Session configuration
     PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
@@ -62,5 +68,5 @@ class TestingConfig(Config):
     """Testing configuration"""
     DEBUG = True
     TESTING = True
-    MONGO_URI = 'mongodb://localhost:27017/turf_booking_test'
+    MONGO_URI = os.environ.get('MONGO_TEST_URI') or 'mongodb://localhost:27017/turf_booking_test'
 

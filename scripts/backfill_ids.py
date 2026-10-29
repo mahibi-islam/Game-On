@@ -1,6 +1,8 @@
-from app import app
+from app import create_app
 from db import mongo
 from models.booking import Booking
+
+app = create_app()
 
 def backfill_ids():
     with app.app_context():

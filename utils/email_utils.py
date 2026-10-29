@@ -48,23 +48,33 @@ def send_email_smtp(to_email, subject, html_content):
         return False
 
 def send_email_gmail_api(to_email, subject, html_content):
-    """Send an email using Google Gmail API with token.json or Credentials.json."""
-    creds_file = os.environ.get('GOOGLE_SHEETS_CREDENTIALS_FILE') or 'Credentials.json'
-    token_file = 'token.json'
+    """Send an email using Google Gmail API with token or service account credentials."""
+    creds_file = os.environ.get('GOOGLE_SHEETS_CREDENTIALS_FILE') or os.environ.get('GOOGLE_CREDENTIALS_FILE') or 'credentials.json'
+    token_file = os.environ.get('GOOGLE_TOKEN_FILE') or 'token.json'
+    creds_json = os.environ.get('GOOGLE_CREDENTIALS_JSON') or os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
+    token_json = os.environ.get('GOOGLE_TOKEN_JSON')
     sender_email = os.environ.get('EMAIL_SENDER') or os.environ.get('EMAIL_USERNAME')
     
-    has_token = os.path.exists(token_file)
-    has_service_account = os.path.exists(creds_file)
+    has_token = bool(token_json) or os.path.exists(token_file)
+    has_service_account = bool(creds_json) or os.path.exists(creds_file)
 
     if not (has_token or has_service_account) or not sender_email:
-        print("GMAIL API: Not fully configured (Missing token.json, Credentials.json or EMAIL_SENDER/USERNAME)")
+        print("GMAIL API: Not fully configured (Missing token, credentials or EMAIL_SENDER/USERNAME)")
         return False
 
     try:
         scopes = ['https://www.googleapis.com/auth/gmail.send']
+        import json
         
-        if has_token:
+        if token_json:
+            token_info = json.loads(token_json) if isinstance(token_json, str) else token_json
+            delegated_creds = UserCredentials.from_authorized_user_info(token_info, scopes)
+        elif os.path.exists(token_file):
             delegated_creds = UserCredentials.from_authorized_user_file(token_file, scopes)
+        elif creds_json:
+            sa_info = json.loads(creds_json) if isinstance(creds_json, str) else creds_json
+            creds = ServiceAccountCredentials.from_service_account_info(sa_info, scopes=scopes)
+            delegated_creds = creds.with_subject(sender_email)
         else:
             creds = ServiceAccountCredentials.from_service_account_file(creds_file, scopes=scopes)
             delegated_creds = creds.with_subject(sender_email)

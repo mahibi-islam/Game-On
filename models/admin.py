@@ -118,19 +118,21 @@ class Admin:
         # Never fall back to a hardcoded password: missing default admins are only
         # created when ADMIN_PASSWORD is set.
         admin_password = os.environ.get('ADMIN_PASSWORD')
+        admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
+        legacy_weak_password = os.environ.get('LEGACY_WEAK_ADMIN_PASSWORD', 'admin123')
         for existing in Admin.find_all():
-            if Admin.verify_password(existing, 'admin123'):
-                print(f"SECURITY WARNING: admin '{existing.get('username')}' still uses the default "
-                      f"password 'admin123'. Change it in Admin > Users.")
+            if Admin.verify_password(existing, legacy_weak_password):
+                print(f"SECURITY WARNING: admin '{existing.get('username')}' still uses an insecure "
+                      f"default password. Change it immediately in Admin > Users.")
 
         # 1. Super Admin
-        superadmin = Admin.find_by_username('admin')
+        superadmin = Admin.find_by_username(admin_username)
         if not superadmin:
             if admin_password:
-                Admin.create('admin', admin_password, role='superadmin', full_name='Super Administrator')
-                print("Default superadmin user 'admin' created.")
+                Admin.create(admin_username, admin_password, role='superadmin', full_name='Super Administrator')
+                print(f"Default superadmin user '{admin_username}' created.")
             else:
-                print("WARNING: no superadmin 'admin' exists and ADMIN_PASSWORD is not set; skipping creation.")
+                print(f"WARNING: no superadmin '{admin_username}' exists and ADMIN_PASSWORD is not set; skipping creation.")
         else:
             # Ensure superadmin role is explicitly set
             if superadmin.get('role') != 'superadmin' or superadmin.get('location_id') is not None:

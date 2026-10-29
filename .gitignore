@@ -48,14 +48,33 @@ bookings.xlsx
 .DS_Store
 Thumbs.db
 
-# Environment variables
+# Environment variables & secrets
 .env
-.env.local
-.env.*.local
+.env.*
+*.env
+!.env.example
 
-# Google Sheets credentials
+# Credentials, tokens, keys & secrets
 credentials.json
+Credentials.json
+kredentials.json
+token.json
+*token*.json
+*credential*.json
+*credentials*.json
+*secret*.json
+client_secret*.json
+service_account*.json
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
 *.json
+!.eslintrc.json
+!tsconfig.json
+!package.json
 
 # Uploads (optional - remove if you want to track uploads)
 static/uploads/*

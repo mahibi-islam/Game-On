@@ -158,40 +158,36 @@ class Booking:
             print("Google Sheets: No Flask app context")
             return None
             
-        sheets_url = current_app.config.get('GOOGLE_SHEETS_URL')
-        creds_file = current_app.config.get('GOOGLE_SHEETS_CREDENTIALS_FILE')
-        
-        print(f"Google Sheets Config Check:")
-        print(f"  - GOOGLE_SHEETS_URL: {sheets_url}")
-        print(f"  - GOOGLE_SHEETS_CREDENTIALS_FILE: {creds_file}")
-        print(f"  - Credentials file exists: {os.path.exists(creds_file) if creds_file else False}")
+        sheets_url = current_app.config.get('GOOGLE_SHEETS_URL') or os.environ.get('GOOGLE_SHEETS_URL')
+        creds_file = current_app.config.get('GOOGLE_SHEETS_CREDENTIALS_FILE') or os.environ.get('GOOGLE_SHEETS_CREDENTIALS_FILE') or os.environ.get('GOOGLE_CREDENTIALS_FILE')
+        creds_json = current_app.config.get('GOOGLE_CREDENTIALS_JSON') or os.environ.get('GOOGLE_CREDENTIALS_JSON') or os.environ.get('GOOGLE_SERVICE_ACCOUNT_JSON')
         
         if not sheets_url:
-            print("Google Sheets: GOOGLE_SHEETS_URL not configured in .env")
+            print("Google Sheets: GOOGLE_SHEETS_URL not configured")
             return None
             
-        if not creds_file:
-            print("Google Sheets: GOOGLE_SHEETS_CREDENTIALS_FILE not configured in .env")
-            return None
-            
-        if not os.path.exists(creds_file):
-            print(f"Google Sheets: Credentials file not found at: {creds_file}")
+        has_creds_json = bool(creds_json)
+        has_creds_file = bool(creds_file and os.path.exists(creds_file))
+
+        if not (has_creds_json or has_creds_file):
+            print("Google Sheets: Credentials not configured (neither GOOGLE_CREDENTIALS_JSON nor valid credentials file found)")
             return None
         
         try:
-            print("Google Sheets: Attempting to connect...")
             scopes = [
                 'https://www.googleapis.com/auth/spreadsheets',
                 'https://www.googleapis.com/auth/drive'
             ]
-            creds = Credentials.from_service_account_file(creds_file, scopes=scopes)
+            if has_creds_json:
+                import json
+                info = json.loads(creds_json) if isinstance(creds_json, str) else creds_json
+                creds = Credentials.from_service_account_info(info, scopes=scopes)
+            else:
+                creds = Credentials.from_service_account_file(creds_file, scopes=scopes)
+
             client = gspread.authorize(creds)
-            
-           
-            print(f"Google Sheets: Opening spreadsheet from URL: {sheets_url}")
             spreadsheet = client.open_by_url(sheets_url)
             worksheet = spreadsheet.sheet1
-            print(f"Google Sheets: Successfully connected to '{spreadsheet.title}' - Sheet: {worksheet.title}")
             return worksheet
         except Exception as e:
             print(f"Google Sheets ERROR: {e}")
